@@ -4,9 +4,10 @@ import { createClient } from '@/lib/supabase'
 
 // ─── BRAND ────────────────────────────────────────────────────
 const C = {
-  gold:'#C9A84C', goldDim:'#9d7f37', black:'#1a1a1a', dark:'#2a2a2a',
-  char:'#ffffff', mid:'#f8f8f8', light:'#e8e8e8', border:'#e0e0e0',
-  muted:'#888888', dim:'#aaaaaa', text:'#2a2a2a', white:'#ffffff',
+  gold:'#E8B931', goldDim:'#d4a526', black:'#1E1E1E', dark:'rgba(38,38,38,0.95)',
+  char:'rgba(255,255,255,0.75)', mid:'rgba(255,255,255,0.5)', light:'rgba(0,0,0,0.06)', border:'rgba(255,255,255,0.5)',
+  muted:'#7a8a6e', dim:'#999999', text:'#2a2a2a', white:'#faf8f5',
+  bg:'#faf8f5', cardShadow:'0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)',
   red:'#C0392B', orange:'#D68910', blue:'#2471A3', green:'#1E8449', purple:'#7D3C98',
 }
 
@@ -188,14 +189,33 @@ function LoginScreen({sb}) {
   }
 
   return (
-    <div style={{minHeight:'100vh',background:C.black,display:'flex',alignItems:'center',justifyContent:'center',padding:20,fontFamily:'Inter,sans-serif'}}>
+    <div style={{minHeight:'100vh',background:`linear-gradient(135deg, ${C.bg} 0%, #f0ece4 50%, #e8dfd0 100%)`,display:'flex',alignItems:'center',justifyContent:'center',padding:20,fontFamily:'Inter,sans-serif'}}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}`}</style>
-      <div style={{width:'100%',maxWidth:380}}>
+      <div style={{width:'100%',maxWidth:400}}>
         <div style={{textAlign:'center',marginBottom:36}}>
  <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:140,height:140,marginBottom:14}} />
- <div style={{fontFamily:'Oswald,sans-serif',fontSize:30,fontWeight:700,color:C.gold,letterSpacing:'-.5px',textTransform:'uppercase'}}>Insta Client Engine</div>
- <div style={{color:C.muted,fontSize:13,marginTop:5}}>Powered by NextLevel Healthpreneur</div>
+ <div style={{fontFamily:'Oswald,sans-serif',fontSize:32,fontWeight:700,color:C.text,letterSpacing:'-.5px',textTransform:'uppercase'}}>Insta Client Engine</div>
+ <div style={{color:C.muted,fontSize:14,marginTop:5}}>Powered by NextLevel Healthpreneur</div>
         </div>
+        <div style={{background:'rgba(255,255,255,0.75)',backdropFilter:'blur(24px)',WebkitBackdropFilter:'blur(24px)',border:'1px solid rgba(255,255,255,0.6)',borderRadius:16,padding:28,boxShadow:'0 8px 32px rgba(0,0,0,0.08)'}}>
+          <div style={{fontFamily:'Oswald,sans-serif',fontSize:18,fontWeight:700,color:C.text,marginBottom:18}}>Sign In</div>
+          {[
+            {label:'Email',val:email,set:setEmail,type:'email',ph:'you@example.com'},
+            {label:'Password',val:pass,set:setPass,type:'password',ph:'••••••••'},
+          ].map(f=>(
+            <div key={f.label} style={{marginBottom:14}}>
+              <div style={{color:C.muted,fontSize:11,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:5,fontFamily:'Oswald,sans-serif',fontWeight:700}}>{f.label}</div>
+              <input type={f.type} value={f.val} onChange={e=>f.set(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()} placeholder={f.ph} style={{width:'100%',background:'rgba(255,255,255,0.5)',border:'1px solid rgba(0,0,0,0.08)',color:C.text,padding:'11px 13px',borderRadius:10,fontSize:14,outline:'none'}}/>
+            </div>
+          ))}
+          {err && <div style={{color:C.red,fontSize:12,marginBottom:12,padding:'8px 12px',background:C.red+'11',borderRadius:8}}>{err}</div>}
+          <button onClick={login} disabled={busy} style={{width:'100%',background:busy?C.muted:C.text,color:'#fff',padding:'12px',borderRadius:10,fontSize:14,fontWeight:700,cursor:busy?'not-allowed':'pointer',fontFamily:'Oswald,sans-serif',border:'none',marginTop:4,boxShadow:'0 4px 12px rgba(0,0,0,0.15)'}}>
+            {busy?'Signing in...':'Sign In'}
+          </button>
+          <div style={{color:C.muted,fontSize:12,textAlign:'center',marginTop:14,lineHeight:1.5}}>Access is by invitation only.<br/>Contact your coach if you need credentials.</div>
+        </div>
+      </div>
+    </div>
         <div style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:14,padding:26,boxShadow:'0 10px 25px rgba(0,0,0,0.15), 0 4px 10px rgba(0,0,0,0.1)'}}>
           <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,fontWeight:700,color:C.text,marginBottom:18}}>Sign In</div>
           {[
@@ -269,21 +289,21 @@ function AdminView({sb, profile}) {
   const sel = selected ? students.find(s=>s.id===selected) : null
 
   return (
-    <div style={{minHeight:'100vh',background:C.black}}>
+    <div style={{minHeight:'100vh',background:C.bg}}>
       <GlobalStyles/>
       {toast && <Toast msg={toast}/>}
       {addOpen && <Overlay onClose={()=>setAddOpen(false)}><InviteForm onSubmit={inviteStudent} onCancel={()=>setAddOpen(false)}/></Overlay>}
 
-      <header style={{background:C.dark,borderBottom:`1px solid ${C.border}`,padding:'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:56,position:'sticky',top:0,zIndex:100}}>
+      <header style={{background:'rgba(255,255,255,0.6)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderBottom:'1px solid rgba(255,255,255,0.4)',padding:'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:56,position:'sticky',top:0,zIndex:100,boxShadow:'0 1px 8px rgba(0,0,0,0.05)'}}>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
-          {selected && <button onClick={()=>setSelected(null)} style={{background:'none',border:'none',color:C.muted,fontSize:20,cursor:'pointer'}}>←</button>}
+          {selected && <button onClick={()=>setSelected(null)} style={{background:'none',border:'none',color:C.text,fontSize:20,cursor:'pointer'}}>←</button>}
           <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:32,height:32}} />
-          <span style={{fontFamily:'Oswald,sans-serif',color:C.gold,fontSize:18,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
-          <span style={{background:C.gold,color:C.black,fontSize:11,fontWeight:800,padding:'2px 5px',borderRadius:3,fontFamily:'Oswald,sans-serif'}}>ADMIN</span>
+          <span style={{fontFamily:'Oswald,sans-serif',color:C.text,fontSize:18,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
+          <span style={{background:C.gold,color:C.text,fontSize:11,fontWeight:800,padding:'3px 7px',borderRadius:6,fontFamily:'Oswald,sans-serif'}}>ADMIN</span>
         </div>
         <div style={{display:'flex',gap:8}}>
-          <button onClick={()=>setAddOpen(true)} style={{background:C.gold,color:C.black,padding:'8px 15px',borderRadius:6,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer'}}>+ Invite Student</button>
-          <button onClick={()=>sb.auth.signOut()} style={{background:'none',border:`1px solid ${C.border}`,color:C.muted,padding:'8px 13px',borderRadius:6,fontSize:13,cursor:'pointer'}}>Sign Out</button>
+          <button onClick={()=>setAddOpen(true)} style={{background:C.text,color:'#fff',padding:'8px 15px',borderRadius:10,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,0.15)'}}>+ Invite Student</button>
+          <button onClick={()=>sb.auth.signOut()} style={{background:'rgba(255,255,255,0.5)',border:'1px solid rgba(0,0,0,0.08)',color:C.text,padding:'8px 13px',borderRadius:10,fontSize:13,cursor:'pointer'}}>Sign Out</button>
         </div>
       </header>
 
@@ -315,7 +335,7 @@ function AdminView({sb, profile}) {
                 const ch=CHANNELS.find(c=>c.id===p.channel)
                 const intent=INTENT.find(i=>i.id===p.intent)
                 return (
-                  <div key={p.id} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:7,padding:'8px 12px',display:'flex',justifyContent:'space-between',alignItems:'center',boxShadow:'0 2px 4px rgba(0,0,0,0.06)'}}>
+                  <div key={p.id} style={{background:'rgba(255,255,255,0.5)',border:'1px solid rgba(0,0,0,0.06)',borderRadius:10,padding:'9px 13px',display:'flex',justifyContent:'space-between',alignItems:'center',boxShadow:'0 2px 6px rgba(0,0,0,0.04)'}}>
                     <div><span style={{color:C.text,fontSize:15,fontWeight:600}}>{p.name}</span><span style={{color:C.muted,fontSize:13,marginLeft:8}}>{p.handle}</span></div>
                     <div style={{display:'flex',gap:6,alignItems:'center'}}>
                       {intent&&<span style={{fontSize:14}}>{intent.emoji}</span>}
@@ -341,7 +361,7 @@ function AdminView({sb, profile}) {
                 const tm=todayM(s.id)
                 const total=Object.values(counts).reduce((a,b)=>a+b,0)
                 return (
-                  <div key={s.id} onClick={()=>setSelected(s.id)} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:10,padding:'13px 15px',cursor:'pointer',transition:'all .15s',boxShadow:'0 2px 4px rgba(0,0,0,0.08)'}} onMouseEnter={e=>{e.currentTarget.style.borderColor=C.gold;e.currentTarget.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)'}} onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.boxShadow='0 2px 4px rgba(0,0,0,0.08)'}}>
+                  <div key={s.id} onClick={()=>setSelected(s.id)} style={{background:'rgba(255,255,255,0.7)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.6)',borderRadius:14,padding:'14px 16px',cursor:'pointer',transition:'all .15s',boxShadow:C.cardShadow}} onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 12px 40px rgba(0,0,0,0.12)'}} onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow=C.cardShadow}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:9}}>
                       <div>
                         <span style={{color:C.text,fontWeight:600,fontSize:16,fontFamily:'Oswald,sans-serif'}}>{s.full_name||s.email}</span>
@@ -487,7 +507,7 @@ function PipelineApp({sb, profile}) {
   })
 
   return (
-    <div style={{minHeight:'100vh',background:C.black}}>
+    <div style={{minHeight:'100vh',background:C.bg}}>
       <GlobalStyles/>
       {toast && <Toast msg={toast}/>}
 
@@ -505,20 +525,20 @@ function PipelineApp({sb, profile}) {
       )}
 
       {/* HEADER */}
-      <header style={{background:C.dark,borderBottom:`1px solid ${C.border}`,padding:'0 18px',display:'flex',alignItems:'center',justifyContent:'space-between',height:54,position:'sticky',top:0,zIndex:200}}>
+      <header style={{background:'rgba(255,255,255,0.6)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',borderBottom:'1px solid rgba(255,255,255,0.4)',padding:'0 18px',display:'flex',alignItems:'center',justifyContent:'space-between',height:56,position:'sticky',top:0,zIndex:200,boxShadow:'0 1px 8px rgba(0,0,0,0.05)'}}>
         <div style={{display:'flex',alignItems:'center',gap:9}}>
-          {view!=='pipeline'&&<button onClick={()=>setView('pipeline')} style={{background:'none',border:'none',color:C.muted,fontSize:24,cursor:'pointer',padding:'0 3px'}}>←</button>}
+          {view!=='pipeline'&&<button onClick={()=>setView('pipeline')} style={{background:'none',border:'none',color:C.text,fontSize:24,cursor:'pointer',padding:'0 3px'}}>←</button>}
           <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:36,height:36}} />
-          <span style={{fontFamily:'Oswald,sans-serif',color:C.gold,fontSize:19,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
+          <span style={{fontFamily:'Oswald,sans-serif',color:C.text,fontSize:19,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
         </div>
         <div style={{display:'flex',gap:6,alignItems:'center'}}>
           {['pipeline','daily'].map(v=>(
-              <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.gold:'none',color:view===v?C.black:C.muted,padding:'8px 15px',borderRadius:6,fontSize:13,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:`1px solid ${view===v?C.gold:C.border}`,cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s'}}>
+              <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.text:'rgba(255,255,255,0.5)',color:view===v?'#fff':C.text,padding:'8px 15px',borderRadius:10,fontSize:13,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:'1px solid rgba(0,0,0,0.08)',cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s',boxShadow:view===v?'0 2px 8px rgba(0,0,0,0.15)':'none'}}>
                 {v}
               </button>
             ))}
-            <button onClick={()=>setAddOpen(true)} style={{background:C.gold,color:C.black,padding:'9px 16px',borderRadius:6,fontSize:13,fontWeight:800,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',marginLeft:3}}>＋ Add</button>
-            <button onClick={()=>sb.auth.signOut()} title="Sign out" style={{background:'none',border:`1px solid ${C.border}`,color:C.muted,padding:'8px 13px',borderRadius:6,fontSize:14,cursor:'pointer'}}>↪</button>
+            <button onClick={()=>setAddOpen(true)} style={{background:C.gold,color:C.text,padding:'9px 16px',borderRadius:10,fontSize:13,fontWeight:800,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',marginLeft:3,boxShadow:'0 2px 8px rgba(232,185,49,0.3)'}}>+ Add</button>
+            <button onClick={()=>sb.auth.signOut()} title="Sign out" style={{background:'rgba(255,255,255,0.5)',border:'1px solid rgba(0,0,0,0.08)',color:C.text,padding:'8px 13px',borderRadius:10,fontSize:14,cursor:'pointer'}}>↪</button>
         </div>
       </header>
 
@@ -530,16 +550,16 @@ function PipelineApp({sb, profile}) {
             {[{k:'dms',l:'DMs',i:'✉',t:60},{k:'replies',l:'Replies',i:'↩',t:20},{k:'emails',l:'Emails',i:'◎',t:5},{k:'offers',l:'Offers',i:'◇',t:5},{k:'sales',l:'Sales',i:'★',t:1}].map(m=>{
               const v=today[m.k]||0,pct=Math.min(100,(v/m.t)*100),hit=v>=m.t
               return (
-                <div key={m.k} style={{flex:'1 1 110px',background:C.char,border:`1px solid ${C.border}`,borderRadius:8,padding:'9px 11px',boxShadow:'0 2px 4px rgba(0,0,0,0.08)'}}>
+                <div key={m.k} style={{flex:'1 1 110px',background:'rgba(255,255,255,0.7)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.6)',borderRadius:12,padding:'10px 12px',boxShadow:C.cardShadow}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}>
-                    <span style={{color:C.muted,fontSize:8,textTransform:'uppercase',letterSpacing:'.3px'}}>{m.i} {m.l}</span>
-                    <div style={{display:'flex',gap:2}}>
-                      <button onClick={()=>bumpMetric(m.k,-1)} style={{background:C.light,color:C.text,width:17,height:17,borderRadius:2,fontSize:12,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>−</button>
-                      <button onClick={()=>bumpMetric(m.k,1)} style={{background:C.gold,color:C.black,width:17,height:17,borderRadius:2,fontSize:10,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>+</button>
+                    <span style={{color:C.muted,fontSize:10,textTransform:'uppercase',letterSpacing:'.3px',fontWeight:600}}>{m.i} {m.l}</span>
+                    <div style={{display:'flex',gap:3}}>
+                      <button onClick={()=>bumpMetric(m.k,-1)} style={{background:'rgba(0,0,0,0.06)',color:C.text,width:20,height:20,borderRadius:6,fontSize:13,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>−</button>
+                      <button onClick={()=>bumpMetric(m.k,1)} style={{background:C.gold,color:C.text,width:20,height:20,borderRadius:6,fontSize:11,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1,boxShadow:'0 2px 6px rgba(232,185,49,0.3)'}}>+</button>
                     </div>
                   </div>
-                  <div style={{fontFamily:'monospace',fontSize:20,fontWeight:700,color:hit?C.gold:C.white,lineHeight:1}}>{v}<span style={{fontSize:9,color:C.muted}}>/{m.t}</span></div>
-                  <div style={{marginTop:5,height:2,background:C.border,borderRadius:2}}><div style={{width:`${pct}%`,height:'100%',background:hit?C.gold:C.blue,borderRadius:2,transition:'width .3s'}}/></div>
+                  <div style={{fontFamily:'monospace',fontSize:22,fontWeight:700,color:hit?C.gold:C.text,lineHeight:1}}>{v}<span style={{fontSize:10,color:C.muted}}>/{m.t}</span></div>
+                  <div style={{marginTop:6,height:3,background:'rgba(0,0,0,0.06)',borderRadius:3}}><div style={{width:`${pct}%`,height:'100%',background:hit?C.gold:C.blue,borderRadius:3,transition:'width .3s'}}/></div>
                 </div>
               )
             })}
@@ -547,14 +567,14 @@ function PipelineApp({sb, profile}) {
 
           {/* Filters */}
           <div style={{display:'flex',gap:6,marginBottom:12,flexWrap:'wrap',alignItems:'center'}}>
-            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search…" style={{background:C.char,border:`1px solid ${C.border}`,color:C.text,padding:'8px 14px',borderRadius:5,fontSize:15,width:180,outline:'none'}}/>
+            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search..." style={{background:'rgba(255,255,255,0.6)',border:'1px solid rgba(0,0,0,0.08)',color:C.text,padding:'8px 14px',borderRadius:10,fontSize:15,width:180,outline:'none',backdropFilter:'blur(8px)'}}/>
             {CHANNELS.map(ch=>(
-              <button key={ch.id} onClick={()=>setFilterCh(filterCh===ch.id?null:ch.id)} style={{background:filterCh===ch.id?ch.color:C.char,color:filterCh===ch.id?C.black:C.dim,border:`1px solid ${filterCh===ch.id?ch.color:C.border}`,padding:'7px 11px',borderRadius:5,fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .12s'}}>
+              <button key={ch.id} onClick={()=>setFilterCh(filterCh===ch.id?null:ch.id)} style={{background:filterCh===ch.id?ch.color:'rgba(255,255,255,0.6)',color:filterCh===ch.id?'#fff':C.text,border:'1px solid rgba(0,0,0,0.08)',padding:'7px 12px',borderRadius:10,fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s',boxShadow:filterCh===ch.id?'0 2px 8px rgba(0,0,0,0.12)':'none'}}>
                 {ch.key}
               </button>
             ))}
             {INTENT.map(i=>(
-              <button key={i.id} onClick={()=>setFilterInt(filterInt===i.id?null:i.id)} style={{background:filterInt===i.id?i.color+'33':C.char,color:filterInt===i.id?i.color:C.dim,border:`1px solid ${filterInt===i.id?i.color:C.border}`,padding:'7px 11px',borderRadius:5,fontSize:15,cursor:'pointer',transition:'all .12s'}}>{i.emoji}</button>
+              <button key={i.id} onClick={()=>setFilterInt(filterInt===i.id?null:i.id)} style={{background:filterInt===i.id?i.color+'22':'rgba(255,255,255,0.6)',color:filterInt===i.id?i.color:C.dim,border:`1px solid ${filterInt===i.id?i.color+'44':'rgba(0,0,0,0.08)'}`,padding:'7px 12px',borderRadius:10,fontSize:15,cursor:'pointer',transition:'all .15s'}}>{i.emoji}</button>
             ))}
             {(filterCh||filterInt||q)&&<button onClick={()=>{setFilterCh(null);setFilterInt(null);setQ('')}} style={{background:'none',border:'none',color:C.muted,fontSize:13,cursor:'pointer',textDecoration:'underline'}}>Clear</button>}
             <span style={{marginLeft:'auto',color:C.muted,fontSize:14}}>{visible.length}/{prospects.length}</span>
@@ -566,20 +586,20 @@ function PipelineApp({sb, profile}) {
               const cards=visible.filter(p=>p.channel===ch.id)
               const open=scriptCh===ch.id
               return (
-                <div key={ch.id} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:10,overflow:'hidden',boxShadow:'0 4px 6px -1px rgba(0,0,0,0.15), 0 2px 4px -1px rgba(0,0,0,0.08)'}}>
-                  <div style={{background:C.mid,padding:'12px 12px',borderBottom:`2px solid ${ch.color}`}}>
+                <div key={ch.id} style={{background:'rgba(255,255,255,0.7)',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.6)',borderRadius:14,overflow:'hidden',boxShadow:C.cardShadow}}>
+                  <div style={{background:'rgba(255,255,255,0.4)',padding:'12px 12px',borderBottom:`2px solid ${ch.color}`}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
                       <div style={{display:'flex',alignItems:'center',gap:6}}>
-                        <span style={{background:ch.color,color:C.black,fontSize:13,fontWeight:800,padding:'3px 7px',borderRadius:3,fontFamily:'Oswald,sans-serif'}}>{ch.key}</span>
+                        <span style={{background:ch.color,color:'#fff',fontSize:13,fontWeight:800,padding:'3px 8px',borderRadius:6,fontFamily:'Oswald,sans-serif'}}>{ch.key}</span>
                         <span style={{color:C.text,fontSize:17,fontWeight:600,fontFamily:'Oswald,sans-serif'}}>{ch.name}</span>
                       </div>
                       <div style={{display:'flex',alignItems:'center',gap:4}}>
-                        <span style={{color:C.gold,fontWeight:700,fontSize:22,fontFamily:'monospace'}}>{chCount(ch.id)}</span>
-                        <button onClick={()=>setScriptCh(open?null:ch.id)} style={{background:open?C.gold:C.light,color:open?C.black:C.muted,width:26,height:26,borderRadius:3,fontSize:14,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .12s'}}>📋</button>
+                        <span style={{color:C.text,fontWeight:700,fontSize:22,fontFamily:'monospace'}}>{chCount(ch.id)}</span>
+                        <button onClick={()=>setScriptCh(open?null:ch.id)} style={{background:open?C.gold:'rgba(0,0,0,0.06)',color:open?C.text:C.muted,width:26,height:26,borderRadius:6,fontSize:14,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .12s'}}>📋</button>
                       </div>
                     </div>
                     <div style={{color:C.muted,fontSize:13,lineHeight:1.4}}>{ch.tagline}</div>
-                    <div style={{color:ch.color,fontSize:13,marginTop:2,opacity:.8}}>{ch.daily}</div>
+                    <div style={{color:ch.color,fontSize:13,marginTop:2,fontWeight:600}}>{ch.daily}</div>
                   </div>
 
                   {open && (
@@ -597,9 +617,9 @@ function PipelineApp({sb, profile}) {
                       const last=pts.length?pts[pts.length-1]:null
                       return (
                         <div key={p.id} onClick={()=>{setFocusId(p.id);setView('detail')}}
-                          style={{background:C.mid,border:`1px solid ${C.border}`,borderRadius:7,padding:'11px 12px',cursor:'pointer',transition:'all .15s',boxShadow:'0 2px 4px rgba(0,0,0,0.08)'}}
-                          onMouseEnter={e=>{e.currentTarget.style.borderColor=ch.color;e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)'}}
-                          onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='0 2px 4px rgba(0,0,0,0.08)'}}>                
+                          style={{background:'rgba(255,255,255,0.5)',border:'1px solid rgba(0,0,0,0.06)',borderRadius:10,padding:'11px 12px',cursor:'pointer',transition:'all .15s',boxShadow:'0 2px 8px rgba(0,0,0,0.04)'}}
+                          onMouseEnter={e=>{e.currentTarget.style.borderColor=ch.color;e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'}}
+                          onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(0,0,0,0.06)';e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)'}}>                
                           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:4}}>
                             <div style={{flex:1,minWidth:0}}>
                               <div style={{color:C.text,fontWeight:600,fontSize:16,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
@@ -611,9 +631,9 @@ function PipelineApp({sb, profile}) {
                           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                             <span style={{color:C.muted,fontSize:13}}>{pts.length} touches</span>
                             <div style={{display:'flex',gap:3}}>
-                              {ch.id>1&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id-1)}} style={{background:C.light,color:C.dim,width:24,height:24,borderRadius:3,fontSize:13,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>←</button>}
-                              {ch.id<5&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id+1)}} style={{background:ch.colorDim,color:ch.color,width:24,height:24,borderRadius:3,fontSize:13,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>→</button>}
-                              <button onClick={e=>{e.stopPropagation();setTouchFor(p.id)}} style={{background:C.goldDim,color:C.gold,width:24,height:24,borderRadius:3,fontSize:15,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+                              {ch.id>1&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id-1)}} style={{background:'rgba(0,0,0,0.06)',color:C.text,width:24,height:24,borderRadius:6,fontSize:13,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>←</button>}
+                              {ch.id<5&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id+1)}} style={{background:ch.color+'22',color:ch.color,width:24,height:24,borderRadius:6,fontSize:13,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>→</button>}
+                              <button onClick={e=>{e.stopPropagation();setTouchFor(p.id)}} style={{background:C.gold,color:C.text,width:24,height:24,borderRadius:6,fontSize:15,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(232,185,49,0.3)'}}>+</button>
                             </div>
                           </div>
                         </div>
@@ -630,7 +650,7 @@ function PipelineApp({sb, profile}) {
       {/* ═══ DAILY ═══ */}
       {view==='daily' && (
         <div style={{padding:'20px 20px 48px',maxWidth:740,margin:'0 auto'}} className="fade">
-          <div style={{fontFamily:'Oswald,sans-serif',fontSize:22,color:C.gold,fontWeight:700,marginBottom:2}}>Daily Workflow</div>
+          <div style={{fontFamily:'Oswald,sans-serif',fontSize:24,color:C.text,fontWeight:700,marginBottom:2}}>Daily Workflow</div>
           <div style={{color:C.muted,fontSize:11,marginBottom:22}}>{new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
 
           <SL>60-Minute Power Hour</SL>
@@ -643,7 +663,7 @@ function PipelineApp({sb, profile}) {
           ].map((s,i)=>(
             <div key={i} style={{display:'flex',gap:11,marginBottom:8}}>
               <div style={{width:60,flexShrink:0,color:s.color,fontFamily:'monospace',fontSize:8,paddingTop:10,textAlign:'right'}}>{s.time}</div>
-              <div style={{flex:1,background:C.char,border:`1px solid ${s.color}33`,borderLeft:`3px solid ${s.color}`,borderRadius:'0 7px 7px 0',padding:'8px 11px'}}>
+              <div style={{flex:1,background:'rgba(255,255,255,0.7)',backdropFilter:'blur(12px)',border:`1px solid rgba(255,255,255,0.5)`,borderLeft:`3px solid ${s.color}`,borderRadius:'0 10px 10px 0',padding:'10px 13px',boxShadow:'0 2px 8px rgba(0,0,0,0.04)'}}>
                 <div style={{color:C.text,fontWeight:600,fontSize:12,fontFamily:'Oswald,sans-serif'}}>{s.task}</div>
                 <div style={{color:C.muted,fontSize:10,marginTop:2,lineHeight:1.5}}>{s.d}</div>
               </div>
@@ -655,13 +675,13 @@ function PipelineApp({sb, profile}) {
             {[{k:'dms',l:'DMs',i:'✉',t:60},{k:'replies',l:'Replies',i:'↩',t:20},{k:'emails',l:'Emails',i:'◎',t:5},{k:'offers',l:'Offers',i:'◇',t:5},{k:'sales',l:'Sales',i:'★',t:1}].map(m=>{
               const v=today[m.k]||0,hit=v>=m.t
               return (
-                <div key={m.k} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:8,padding:'11px 7px',textAlign:'center',boxShadow:'0 2px 4px rgba(0,0,0,0.08)'}}>
-                  <div style={{color:C.muted,fontSize:7,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:5}}>{m.i} {m.l}</div>
-                  <div style={{fontFamily:'monospace',fontSize:26,fontWeight:700,color:hit?C.gold:C.white,lineHeight:1}}>{v}</div>
+                <div key={m.k} style={{background:'rgba(255,255,255,0.7)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.5)',borderRadius:12,padding:'12px 8px',textAlign:'center',boxShadow:C.cardShadow}}>
+                  <div style={{color:C.muted,fontSize:9,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:5,fontWeight:600}}>{m.i} {m.l}</div>
+                  <div style={{fontFamily:'monospace',fontSize:28,fontWeight:700,color:hit?C.gold:C.text,lineHeight:1}}>{v}</div>
                   <div style={{color:C.muted,fontSize:7,marginBottom:8}}>/{m.t}</div>
                   <div style={{display:'flex',gap:4,justifyContent:'center'}}>
-                    <button onClick={()=>bumpMetric(m.k,-1)} style={{background:C.light,color:C.text,width:22,height:22,borderRadius:4,fontSize:13,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>−</button>
-                    <button onClick={()=>bumpMetric(m.k,1)} style={{background:C.gold,color:C.black,width:22,height:22,borderRadius:4,fontSize:11,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+                    <button onClick={()=>bumpMetric(m.k,-1)} style={{background:'rgba(0,0,0,0.06)',color:C.text,width:24,height:24,borderRadius:8,fontSize:14,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>−</button>
+                    <button onClick={()=>bumpMetric(m.k,1)} style={{background:C.gold,color:C.text,width:24,height:24,borderRadius:8,fontSize:12,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(232,185,49,0.3)'}}>+</button>
                   </div>
                 </div>
               )
@@ -671,7 +691,7 @@ function PipelineApp({sb, profile}) {
           <SL>Pipeline Snapshot</SL>
           <div style={{display:'flex',gap:7}}>
             {CHANNELS.map(ch=>(
-              <div key={ch.id} style={{flex:1,background:C.char,border:`1px solid ${C.border}`,borderTop:`3px solid ${ch.color}`,borderRadius:'0 0 6px 6px',padding:'8px 5px',textAlign:'center'}}>
+              <div key={ch.id} style={{flex:1,background:'rgba(255,255,255,0.7)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.5)',borderTop:`3px solid ${ch.color}`,borderRadius:'0 0 10px 10px',padding:'10px 6px',textAlign:'center',boxShadow:'0 2px 8px rgba(0,0,0,0.04)'}}>
                 <div style={{color:ch.color,fontSize:7,fontWeight:800,fontFamily:'Oswald,sans-serif',marginBottom:2}}>{ch.key}</div>
                 <div style={{color:C.text,fontSize:18,fontWeight:700,fontFamily:'monospace'}}>{chCount(ch.id)}</div>
               </div>
@@ -691,31 +711,31 @@ function PipelineApp({sb, profile}) {
                 <div style={{color:C.muted,fontSize:11}}>{p.handle}{p.source?` · via ${p.source}`:''}</div>
               </div>
               <div style={{display:'flex',gap:6}}>
-                <button onClick={()=>setTouchFor(p.id)} style={{background:C.gold,color:C.black,padding:'6px 12px',borderRadius:6,fontSize:10,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer'}}>+ Touch</button>
+                <button onClick={()=>setTouchFor(p.id)} style={{background:C.text,color:'#fff',padding:'7px 14px',borderRadius:10,fontSize:11,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,0.15)'}}>+ Touch</button>
                 <button onClick={()=>setConfirmDel(p.id)} style={{background:C.red+'22',color:C.red,padding:'6px 9px',borderRadius:6,fontSize:10,border:'none',cursor:'pointer'}}>✕</button>
               </div>
             </div>
 
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:14}}>
-              <div style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:8,padding:12}}>
+              <div style={{background:'rgba(255,255,255,0.7)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.5)',borderRadius:12,padding:12,boxShadow:C.cardShadow}}>
                 <SL small>Channel</SL>
                 <div style={{display:'flex',flexWrap:'wrap',gap:3,marginBottom:6}}>
                   {CHANNELS.map(c=>(
-                    <button key={c.id} onClick={()=>moveProspect(p.id,c.id)} style={{background:p.channel===c.id?c.color:C.light,color:p.channel===c.id?C.black:C.dim,padding:'3px 6px',borderRadius:3,fontSize:8,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',transition:'all .12s'}}>{c.key}</button>
+                    <button key={c.id} onClick={()=>moveProspect(p.id,c.id)} style={{background:p.channel===c.id?c.color:'rgba(0,0,0,0.06)',color:p.channel===c.id?'#fff':C.text,padding:'4px 7px',borderRadius:6,fontSize:9,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',transition:'all .12s'}}>{c.key}</button>
                   ))}
                 </div>
                 <div style={{color:ch.color,fontSize:10,fontWeight:600,fontFamily:'Oswald,sans-serif'}}>{ch.name}</div>
                 <div style={{color:C.muted,fontSize:8,marginTop:1,lineHeight:1.4}}>{ch.tagline}</div>
               </div>
-              <div style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:8,padding:12}}>
+              <div style={{background:'rgba(255,255,255,0.7)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.5)',borderRadius:12,padding:12,boxShadow:C.cardShadow}}>
                 <SL small>Intent Level</SL>
                 {INTENT.map(i=>(
-                  <button key={i.id} onClick={()=>setIntent(p.id,i.id)} style={{display:'block',width:'100%',background:p.intent===i.id?i.color+'22':C.light,color:p.intent===i.id?i.color:C.dim,border:`1px solid ${p.intent===i.id?i.color:'transparent'}`,padding:'5px 7px',borderRadius:4,fontSize:10,textAlign:'left',cursor:'pointer',marginBottom:3,fontWeight:p.intent===i.id?600:400,transition:'all .12s'}}>{i.emoji} {i.label}</button>
+                  <button key={i.id} onClick={()=>setIntent(p.id,i.id)} style={{display:'block',width:'100%',background:p.intent===i.id?i.color+'22':'rgba(0,0,0,0.04)',color:p.intent===i.id?i.color:C.text,border:`1px solid ${p.intent===i.id?i.color+'44':'transparent'}`,padding:'6px 8px',borderRadius:8,fontSize:11,textAlign:'left',cursor:'pointer',marginBottom:3,fontWeight:p.intent===i.id?600:400,transition:'all .12s'}}>{i.emoji} {i.label}</button>
                 ))}
               </div>
             </div>
 
-                <div style={{background:'#fafafa',border:`1px solid ${ch.color}33`,borderLeft:`3px solid ${ch.color}`,borderRadius:'0 8px 8px 0',padding:'11px 13px',marginBottom:14}}>
+                <div style={{background:'rgba(255,255,255,0.6)',backdropFilter:'blur(8px)',border:'1px solid rgba(255,255,255,0.5)',borderLeft:`3px solid ${ch.color}`,borderRadius:'0 10px 10px 0',padding:'12px 14px',marginBottom:14,boxShadow:'0 2px 8px rgba(0,0,0,0.04)'}}>
               <div style={{color:ch.color,fontSize:7,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:7,fontFamily:'Oswald,sans-serif'}}>📋 Script — {ch.name}</div>
               <pre style={{color:'#6a7a8a',fontSize:8,whiteSpace:'pre-wrap',lineHeight:1.7,fontFamily:'monospace'}}>{ch.script}</pre>
             </div>
@@ -761,10 +781,10 @@ function GlobalStyles() {
   return <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{background:${C.black};color:${C.text};font-family:'Inter',sans-serif;min-height:100vh}
-    ::-webkit-scrollbar{width:4px;height:4px}
-    ::-webkit-scrollbar-track{background:${C.dark}}
-    ::-webkit-scrollbar-thumb{background:${C.border};border-radius:2px}
+    html,body{background:${C.bg};color:${C.text};font-family:'Inter',sans-serif;min-height:100vh}
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.15);border-radius:4px}
     button{cursor:pointer;border:none;font-family:'Inter',sans-serif}
     input,textarea{font-family:'Inter',sans-serif;outline:none}
     .fade{animation:fade .2s ease}
@@ -773,17 +793,17 @@ function GlobalStyles() {
 }
 
 function Splash({children}) {
-  return <div style={{minHeight:'100vh',background:C.black,display:'flex',alignItems:'center',justifyContent:'center',color:C.muted,fontSize:13,fontFamily:'Inter,sans-serif'}}><style>{`*{box-sizing:border-box;margin:0;padding:0}body{background:${C.black}}`}</style>{children}</div>
+  return <div style={{minHeight:'100vh',background:C.bg,display:'flex',alignItems:'center',justifyContent:'center',color:C.muted,fontSize:13,fontFamily:'Inter,sans-serif'}}><style>{`*{box-sizing:border-box;margin:0;padding:0}body{background:${C.bg}}`}</style>{children}</div>
 }
 
 function Toast({msg}) {
-  return <div style={{position:'fixed',top:14,right:14,zIndex:9999,background:C.gold,color:C.black,padding:'7px 14px',borderRadius:6,fontSize:11,fontWeight:700,fontFamily:'Oswald,sans-serif',boxShadow:'0 4px 20px rgba(0,0,0,.5)',animation:'fade .2s ease'}}>{msg}</div>
+  return <div style={{position:'fixed',top:14,right:14,zIndex:9999,background:C.text,color:'#fff',padding:'8px 16px',borderRadius:10,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',boxShadow:'0 4px 20px rgba(0,0,0,.15)',animation:'fade .2s ease'}}>{msg}</div>
 }
 
 function Overlay({children,onClose}) {
   return (
-    <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.82)',zIndex:500,display:'flex',alignItems:'center',justifyContent:'center',padding:14}}>
-        <div onClick={e=>e.stopPropagation()} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:12,padding:20,width:'100%',maxWidth:440,maxHeight:'90vh',overflowY:'auto',boxShadow:'0 20px 50px rgba(0,0,0,0.25)'}} className="fade">{children}</div>
+    <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.4)',backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',zIndex:500,display:'flex',alignItems:'center',justifyContent:'center',padding:14}}>
+        <div onClick={e=>e.stopPropagation()} style={{background:'rgba(255,255,255,0.85)',backdropFilter:'blur(24px)',WebkitBackdropFilter:'blur(24px)',border:'1px solid rgba(255,255,255,0.6)',borderRadius:16,padding:22,width:'100%',maxWidth:440,maxHeight:'90vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,0.12)'}} className="fade">{children}</div>
     </div>
   )
 }
@@ -793,18 +813,18 @@ function SL({children,small}) {
 }
 
 function GoldBtn({children,onClick,full,style:s={}}) {
-  return <button onClick={onClick} style={{flex:full?1:undefined,background:C.gold,color:C.black,border:'none',padding:'8px 11px',borderRadius:6,fontSize:11,fontWeight:700,fontFamily:'Oswald,sans-serif',width:full?'100%':undefined,cursor:'pointer',...s}}>{children}</button>
+  return <button onClick={onClick} style={{flex:full?1:undefined,background:C.text,color:'#fff',border:'none',padding:'9px 13px',borderRadius:10,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',width:full?'100%':undefined,cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,0.15)',...s}}>{children}</button>
 }
 
 function GhostBtn({children,onClick,full}) {
-  return <button onClick={onClick} style={{flex:full?1:undefined,background:C.mid,color:C.text,border:`1px solid ${C.border}`,padding:'8px 11px',borderRadius:6,fontSize:11,fontFamily:'Inter,sans-serif',width:full?'100%':undefined,cursor:'pointer'}}>{children}</button>
+  return <button onClick={onClick} style={{flex:full?1:undefined,background:'rgba(255,255,255,0.5)',color:C.text,border:'1px solid rgba(0,0,0,0.08)',padding:'9px 13px',borderRadius:10,fontSize:12,fontFamily:'Inter,sans-serif',width:full?'100%':undefined,cursor:'pointer'}}>{children}</button>
 }
 
 function MetricsRow({m}) {
   return (
     <div style={{display:'flex',gap:5}}>
       {[['DMs',m.dms],['Replies',m.replies],['Emails',m.emails],['Offers',m.offers],['Sales',m.sales]].map(([l,v])=>(
-        <div key={l} style={{flex:1,background:C.mid,border:`1px solid ${C.border}`,borderRadius:5,padding:'6px 3px',textAlign:'center'}}>
+        <div key={l} style={{flex:1,background:'rgba(255,255,255,0.5)',border:'1px solid rgba(0,0,0,0.06)',borderRadius:8,padding:'6px 3px',textAlign:'center'}}>
           <div style={{color:C.muted,fontSize:7,marginBottom:2}}>{l}</div>
           <div style={{color:C.text,fontSize:14,fontWeight:700,fontFamily:'monospace'}}>{v||0}</div>
         </div>
@@ -819,36 +839,36 @@ function AddForm({onSubmit,onCancel,saving}) {
   const ok=f.name.trim()&&f.handle.trim()
   return (
     <>
-      <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,color:C.gold,fontWeight:700,marginBottom:14}}>Add Prospect</div>
-      {[{k:'name',l:'Full Name *',ph:'Jane Smith'},{k:'handle',l:'Handle *',ph:'@janesmith'},{k:'source',l:'Where Found',ph:'hashtag, referral…'}].map(row=>(
+      <div style={{fontFamily:'Oswald,sans-serif',fontSize:18,color:C.text,fontWeight:700,marginBottom:14}}>Add Prospect</div>
+      {[{k:'name',l:'Full Name *',ph:'Jane Smith'},{k:'handle',l:'Handle *',ph:'@janesmith'},{k:'source',l:'Where Found',ph:'hashtag, referral...'}].map(row=>(
         <div key={row.k} style={{marginBottom:10}}>
           <SL small>{row.l}</SL>
-          <input value={f[row.k]} onChange={e=>set(row.k,e.target.value)} placeholder={row.ph} style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.text,padding:'7px 9px',borderRadius:6,fontSize:12}}/>
+          <input value={f[row.k]} onChange={e=>set(row.k,e.target.value)} placeholder={row.ph} style={{width:'100%',background:'rgba(255,255,255,0.5)',border:'1px solid rgba(0,0,0,0.08)',color:C.text,padding:'8px 10px',borderRadius:8,fontSize:13}}/>
         </div>
       ))}
       <div style={{marginBottom:10}}>
         <SL small>Starting Channel</SL>
-        <div style={{display:'flex',gap:3}}>
+        <div style={{display:'flex',gap:4}}>
           {CHANNELS.map(ch=>(
-            <button key={ch.id} onClick={()=>set('channel',String(ch.id))} style={{flex:1,background:f.channel===String(ch.id)?ch.color:C.mid,color:f.channel===String(ch.id)?C.black:C.dim,border:`1px solid ${f.channel===String(ch.id)?ch.color:C.border}`,padding:'5px 0',borderRadius:4,fontSize:8,fontWeight:700,fontFamily:'Oswald,sans-serif',cursor:'pointer',transition:'all .12s'}}>{ch.key}</button>
+            <button key={ch.id} onClick={()=>set('channel',String(ch.id))} style={{flex:1,background:f.channel===String(ch.id)?ch.color:'rgba(255,255,255,0.5)',color:f.channel===String(ch.id)?'#fff':C.text,border:`1px solid ${f.channel===String(ch.id)?ch.color:'rgba(0,0,0,0.08)'}`,padding:'6px 0',borderRadius:8,fontSize:10,fontWeight:700,fontFamily:'Oswald,sans-serif',cursor:'pointer',transition:'all .12s'}}>{ch.key}</button>
           ))}
         </div>
       </div>
       <div style={{marginBottom:10}}>
         <SL small>Intent Level</SL>
-        <div style={{display:'flex',gap:3}}>
+        <div style={{display:'flex',gap:4}}>
           {INTENT.map(i=>(
-            <button key={i.id} onClick={()=>set('intent',i.id)} style={{flex:1,background:f.intent===i.id?i.color+'33':C.mid,color:f.intent===i.id?i.color:C.dim,border:`1px solid ${f.intent===i.id?i.color:C.border}`,padding:'5px 0',borderRadius:4,fontSize:10,fontWeight:600,cursor:'pointer',transition:'all .12s'}}>{i.emoji}</button>
+            <button key={i.id} onClick={()=>set('intent',i.id)} style={{flex:1,background:f.intent===i.id?i.color+'22':'rgba(255,255,255,0.5)',color:f.intent===i.id?i.color:C.dim,border:`1px solid ${f.intent===i.id?i.color:'rgba(0,0,0,0.08)'}`,padding:'6px 0',borderRadius:8,fontSize:11,fontWeight:600,cursor:'pointer',transition:'all .12s'}}>{i.emoji}</button>
           ))}
         </div>
       </div>
       <div style={{marginBottom:14}}>
         <SL small>Notes</SL>
-        <textarea value={f.notes} onChange={e=>set('notes',e.target.value)} placeholder="Pain points, bio detail, what they're working on…" style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.text,padding:'7px 9px',borderRadius:6,fontSize:11,resize:'vertical',minHeight:60,lineHeight:1.5}}/>
+        <textarea value={f.notes} onChange={e=>set('notes',e.target.value)} placeholder="Pain points, bio detail, what they're working on..." style={{width:'100%',background:'rgba(255,255,255,0.5)',border:'1px solid rgba(0,0,0,0.08)',color:C.text,padding:'8px 10px',borderRadius:8,fontSize:12,resize:'vertical',minHeight:60,lineHeight:1.5}}/>
       </div>
       <div style={{display:'flex',gap:7}}>
         <GhostBtn full onClick={onCancel}>Cancel</GhostBtn>
-        <GoldBtn full onClick={()=>ok&&!saving&&onSubmit(f)} style={{background:ok&&!saving?C.gold:'#333',color:ok&&!saving?C.black:C.muted,cursor:ok&&!saving?'pointer':'not-allowed'}}>{saving?'Saving…':'Add to Pipeline'}</GoldBtn>
+        <GoldBtn full onClick={()=>ok&&!saving&&onSubmit(f)} style={{background:ok&&!saving?C.text:'#ccc',color:ok&&!saving?'#fff':C.muted,cursor:ok&&!saving?'pointer':'not-allowed'}}>{saving?'Saving...':'Add to Pipeline'}</GoldBtn>
       </div>
     </>
   )
@@ -861,17 +881,17 @@ function TouchForm({prospect,onSubmit,onCancel}) {
   const types=[...new Set([...(ch?.touchTypes||[]),'Value-add message','Lead magnet sent','Soft offer sent','Objection handled','Discovery call booked','Sale closed','Follow-up touch','Story reaction','Comment left','Liked posts'])]
   return (
     <>
-      <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,color:C.gold,fontWeight:700,marginBottom:4}}>Log Touch</div>
-      <div style={{color:C.muted,fontSize:10,marginBottom:12}}>{prospect?.name} · <span style={{color:ch?.color}}>{ch?.name}</span></div>
+      <div style={{fontFamily:'Oswald,sans-serif',fontSize:18,color:C.text,fontWeight:700,marginBottom:4}}>Log Touch</div>
+      <div style={{color:C.muted,fontSize:12,marginBottom:12}}>{prospect?.name} · <span style={{color:ch?.color}}>{ch?.name}</span></div>
       <SL small>Touch Type</SL>
       <div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:12}}>
         {types.map(t=>(
-          <button key={t} onClick={()=>setType(t)} style={{background:type===t?C.gold:C.mid,color:type===t?C.black:C.dim,border:`1px solid ${type===t?C.gold:C.border}`,padding:'3px 7px',borderRadius:3,fontSize:9,fontWeight:type===t?700:400,cursor:'pointer',transition:'all .1s'}}>{t}</button>
+          <button key={t} onClick={()=>setType(t)} style={{background:type===t?C.text:'rgba(255,255,255,0.5)',color:type===t?'#fff':C.text,border:`1px solid ${type===t?C.text:'rgba(0,0,0,0.08)'}`,padding:'4px 8px',borderRadius:8,fontSize:10,fontWeight:type===t?700:400,cursor:'pointer',transition:'all .1s'}}>{t}</button>
         ))}
       </div>
       <div style={{marginBottom:14}}>
         <SL small>Note (optional)</SL>
-        <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="What happened? What did they say?" style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.text,padding:'7px 9px',borderRadius:6,fontSize:11,resize:'vertical',minHeight:60,lineHeight:1.5}}/>
+        <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="What happened? What did they say?" style={{width:'100%',background:'rgba(255,255,255,0.5)',border:'1px solid rgba(0,0,0,0.08)',color:C.text,padding:'8px 10px',borderRadius:8,fontSize:12,resize:'vertical',minHeight:60,lineHeight:1.5}}/>
       </div>
       <div style={{display:'flex',gap:7}}>
         <GhostBtn full onClick={onCancel}>Cancel</GhostBtn>
