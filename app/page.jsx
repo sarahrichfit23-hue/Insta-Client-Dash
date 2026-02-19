@@ -147,7 +147,17 @@ export default function App() {
       setSession(s)
       if (!s) setProfile(null)
     })
-    return () => subscription.unsubscribe()
+    
+    // Auto-logout when tab/window closes
+    const handleBeforeUnload = () => {
+      sb.auth.signOut()
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
   }, [sb])
 
   useEffect(() => {
