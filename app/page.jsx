@@ -186,7 +186,7 @@ function LoginScreen({sb}) {
  <div style={{fontFamily:'Oswald,sans-serif',fontSize:30,fontWeight:700,color:C.gold,letterSpacing:'-.5px',textTransform:'uppercase'}}>Insta Client Engine</div>
  <div style={{color:C.muted,fontSize:13,marginTop:5}}>Powered by NextLevel Healthpreneur</div>
         </div>
-        <div style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:14,padding:26}}>
+        <div style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:14,padding:26,boxShadow:'0 10px 25px rgba(0,0,0,0.15), 0 4px 10px rgba(0,0,0,0.1)'}}>
           <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,fontWeight:700,color:C.text,marginBottom:18}}>Sign In</div>
           {[
             {label:'Email',val:email,set:setEmail,type:'email',ph:'you@example.com'},
@@ -305,7 +305,7 @@ function AdminView({sb, profile}) {
                 const ch=CHANNELS.find(c=>c.id===p.channel)
                 const intent=INTENT.find(i=>i.id===p.intent)
                 return (
-                  <div key={p.id} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:7,padding:'8px 12px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <div key={p.id} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:7,padding:'8px 12px',display:'flex',justifyContent:'space-between',alignItems:'center',boxShadow:'0 2px 4px rgba(0,0,0,0.06)'}}>
                     <div><span style={{color:C.text,fontSize:15,fontWeight:600}}>{p.name}</span><span style={{color:C.muted,fontSize:13,marginLeft:8}}>{p.handle}</span></div>
                     <div style={{display:'flex',gap:6,alignItems:'center'}}>
                       {intent&&<span style={{fontSize:14}}>{intent.emoji}</span>}
@@ -331,7 +331,7 @@ function AdminView({sb, profile}) {
                 const tm=todayM(s.id)
                 const total=Object.values(counts).reduce((a,b)=>a+b,0)
                 return (
-                  <div key={s.id} onClick={()=>setSelected(s.id)} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:10,padding:'13px 15px',cursor:'pointer',transition:'border-color .15s'}} onMouseEnter={e=>e.currentTarget.style.borderColor=C.gold} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
+                  <div key={s.id} onClick={()=>setSelected(s.id)} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:10,padding:'13px 15px',cursor:'pointer',transition:'all .15s',boxShadow:'0 2px 4px rgba(0,0,0,0.08)'}} onMouseEnter={e=>{e.currentTarget.style.borderColor=C.gold;e.currentTarget.style.boxShadow='0 4px 8px rgba(0,0,0,0.12)'}} onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.boxShadow='0 2px 4px rgba(0,0,0,0.08)'}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:9}}>
                       <div>
                         <span style={{color:C.text,fontWeight:600,fontSize:16,fontFamily:'Oswald,sans-serif'}}>{s.full_name||s.email}</span>
@@ -520,7 +520,7 @@ function PipelineApp({sb, profile}) {
             {[{k:'dms',l:'DMs',i:'✉',t:60},{k:'replies',l:'Replies',i:'↩',t:20},{k:'emails',l:'Emails',i:'◎',t:5},{k:'offers',l:'Offers',i:'◇',t:5},{k:'sales',l:'Sales',i:'★',t:1}].map(m=>{
               const v=today[m.k]||0,pct=Math.min(100,(v/m.t)*100),hit=v>=m.t
               return (
-                <div key={m.k} style={{flex:'1 1 110px',background:C.char,border:`1px solid ${C.border}`,borderRadius:8,padding:'9px 11px'}}>
+                <div key={m.k} style={{flex:'1 1 110px',background:C.char,border:`1px solid ${C.border}`,borderRadius:8,padding:'9px 11px',boxShadow:'0 2px 4px rgba(0,0,0,0.08)'}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}>
                     <span style={{color:C.muted,fontSize:8,textTransform:'uppercase',letterSpacing:'.3px'}}>{m.i} {m.l}</span>
                     <div style={{display:'flex',gap:2}}>
@@ -556,7 +556,7 @@ function PipelineApp({sb, profile}) {
               const cards=visible.filter(p=>p.channel===ch.id)
               const open=scriptCh===ch.id
               return (
-                <div key={ch.id} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:10,overflow:'hidden'}}>
+                <div key={ch.id} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:10,overflow:'hidden',boxShadow:'0 4px 6px -1px rgba(0,0,0,0.15), 0 2px 4px -1px rgba(0,0,0,0.08)'}}>
                   <div style={{background:C.mid,padding:'12px 12px',borderBottom:`2px solid ${ch.color}`}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
                       <div style={{display:'flex',alignItems:'center',gap:6}}>
@@ -587,9 +587,9 @@ function PipelineApp({sb, profile}) {
                       const last=pts.length?pts[pts.length-1]:null
                       return (
                         <div key={p.id} onClick={()=>{setFocusId(p.id);setView('detail')}}
-                          style={{background:C.mid,border:`1px solid ${C.border}`,borderRadius:7,padding:'11px 12px',cursor:'pointer',transition:'border-color .12s,transform .1s'}}
-                          onMouseEnter={e=>{e.currentTarget.style.borderColor=ch.color;e.currentTarget.style.transform='translateY(-1px)'}}
-                          onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.transform='translateY(0)'}}>
+                          style={{background:C.mid,border:`1px solid ${C.border}`,borderRadius:7,padding:'11px 12px',cursor:'pointer',transition:'all .15s',boxShadow:'0 2px 4px rgba(0,0,0,0.08)'}}
+                          onMouseEnter={e=>{e.currentTarget.style.borderColor=ch.color;e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)'}}
+                          onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='0 2px 4px rgba(0,0,0,0.08)'}}>                
                           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:4}}>
                             <div style={{flex:1,minWidth:0}}>
                               <div style={{color:C.text,fontWeight:600,fontSize:16,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
@@ -645,7 +645,7 @@ function PipelineApp({sb, profile}) {
             {[{k:'dms',l:'DMs',i:'✉',t:60},{k:'replies',l:'Replies',i:'↩',t:20},{k:'emails',l:'Emails',i:'◎',t:5},{k:'offers',l:'Offers',i:'◇',t:5},{k:'sales',l:'Sales',i:'★',t:1}].map(m=>{
               const v=today[m.k]||0,hit=v>=m.t
               return (
-                <div key={m.k} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:8,padding:'11px 7px',textAlign:'center'}}>
+                <div key={m.k} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:8,padding:'11px 7px',textAlign:'center',boxShadow:'0 2px 4px rgba(0,0,0,0.08)'}}>
                   <div style={{color:C.muted,fontSize:7,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:5}}>{m.i} {m.l}</div>
                   <div style={{fontFamily:'monospace',fontSize:26,fontWeight:700,color:hit?C.gold:C.white,lineHeight:1}}>{v}</div>
                   <div style={{color:C.muted,fontSize:7,marginBottom:8}}>/{m.t}</div>
@@ -773,7 +773,7 @@ function Toast({msg}) {
 function Overlay({children,onClose}) {
   return (
     <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.82)',zIndex:500,display:'flex',alignItems:'center',justifyContent:'center',padding:14}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:12,padding:20,width:'100%',maxWidth:440,maxHeight:'90vh',overflowY:'auto'}} className="fade">{children}</div>
+        <div onClick={e=>e.stopPropagation()} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:12,padding:20,width:'100%',maxWidth:440,maxHeight:'90vh',overflowY:'auto',boxShadow:'0 20px 50px rgba(0,0,0,0.25)'}} className="fade">{children}</div>
     </div>
   )
 }
