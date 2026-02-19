@@ -182,7 +182,7 @@ function LoginScreen({sb}) {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}`}</style>
       <div style={{width:'100%',maxWidth:380}}>
         <div style={{textAlign:'center',marginBottom:36}}>
- <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:80,height:80,marginBottom:10}} />
+ <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:140,height:140,marginBottom:14}} />
  <div style={{fontFamily:'Oswald,sans-serif',fontSize:30,fontWeight:700,color:C.gold,letterSpacing:'-.5px',textTransform:'uppercase'}}>Insta Client Engine</div>
  <div style={{color:C.muted,fontSize:13,marginTop:5}}>Powered by NextLevel Healthpreneur</div>
         </div>
@@ -746,7 +746,7 @@ function PipelineApp({sb, profile}) {
   )
 }
 
-// ─── SHARED UI ────────────────────────────────────────────────
+// ─── SHARED UI ─────────────���──────────────────────────────────
 function GlobalStyles() {
   return <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
