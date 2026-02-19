@@ -179,25 +179,26 @@ function LoginScreen({sb}) {
 
   return (
     <div style={{minHeight:'100vh',background:C.black,display:'flex',alignItems:'center',justifyContent:'center',padding:20,fontFamily:'Inter,sans-serif'}}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}`}</style>
       <div style={{width:'100%',maxWidth:380}}>
         <div style={{textAlign:'center',marginBottom:36}}>
-          <div style={{fontFamily:'Syne,sans-serif',fontSize:30,fontWeight:800,color:C.gold,letterSpacing:'-.5px'}}>ICE Pipeline™</div>
-          <div style={{color:C.muted,fontSize:13,marginTop:5}}>Instagram Client Engine Intensive</div>
+ <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:80,height:80,marginBottom:10}} />
+ <div style={{fontFamily:'Oswald,sans-serif',fontSize:30,fontWeight:700,color:C.gold,letterSpacing:'-.5px',textTransform:'uppercase'}}>Insta Client Engine</div>
+ <div style={{color:C.muted,fontSize:13,marginTop:5}}>Powered by NextLevel Healthpreneur</div>
         </div>
         <div style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:14,padding:26}}>
-          <div style={{fontFamily:'Syne,sans-serif',fontSize:17,fontWeight:700,color:C.white,marginBottom:18}}>Sign In</div>
+          <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,fontWeight:700,color:C.white,marginBottom:18}}>Sign In</div>
           {[
             {label:'Email',val:email,set:setEmail,type:'email',ph:'you@example.com'},
             {label:'Password',val:pass,set:setPass,type:'password',ph:'••••••••'},
           ].map(f=>(
             <div key={f.label} style={{marginBottom:12}}>
-              <div style={{color:C.muted,fontSize:9,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:5,fontFamily:'Syne,sans-serif',fontWeight:700}}>{f.label}</div>
+              <div style={{color:C.muted,fontSize:9,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:5,fontFamily:'Oswald,sans-serif',fontWeight:700}}>{f.label}</div>
               <input type={f.type} value={f.val} onChange={e=>f.set(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()} placeholder={f.ph} style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.white,padding:'9px 11px',borderRadius:7,fontSize:13,outline:'none'}}/>
             </div>
           ))}
           {err && <div style={{color:C.red,fontSize:11,marginBottom:12,padding:'7px 10px',background:C.red+'11',borderRadius:6}}>{err}</div>}
-          <button onClick={login} disabled={busy} style={{width:'100%',background:busy?C.muted:C.gold,color:C.black,padding:'10px',borderRadius:7,fontSize:13,fontWeight:700,cursor:busy?'not-allowed':'pointer',fontFamily:'Syne,sans-serif',border:'none',marginTop:4}}>
+          <button onClick={login} disabled={busy} style={{width:'100%',background:busy?C.muted:C.gold,color:C.black,padding:'10px',borderRadius:7,fontSize:13,fontWeight:700,cursor:busy?'not-allowed':'pointer',fontFamily:'Oswald,sans-serif',border:'none',marginTop:4}}>
             {busy?'Signing in…':'Sign In →'}
           </button>
           <div style={{color:C.muted,fontSize:10,textAlign:'center',marginTop:12,lineHeight:1.5}}>Access is by invitation only.<br/>Contact your coach if you need credentials.</div>
@@ -266,11 +267,12 @@ function AdminView({sb, profile}) {
       <header style={{background:C.dark,borderBottom:`1px solid ${C.border}`,padding:'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:56,position:'sticky',top:0,zIndex:100}}>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
           {selected && <button onClick={()=>setSelected(null)} style={{background:'none',border:'none',color:C.muted,fontSize:20,cursor:'pointer'}}>←</button>}
-          <span style={{fontFamily:'Syne,sans-serif',color:C.gold,fontSize:16,fontWeight:700}}>ICE Pipeline™</span>
-          <span style={{background:C.gold,color:C.black,fontSize:8,fontWeight:800,padding:'2px 5px',borderRadius:3,fontFamily:'Syne,sans-serif'}}>ADMIN</span>
+          <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:32,height:32}} />
+          <span style={{fontFamily:'Oswald,sans-serif',color:C.gold,fontSize:16,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
+          <span style={{background:C.gold,color:C.black,fontSize:8,fontWeight:800,padding:'2px 5px',borderRadius:3,fontFamily:'Oswald,sans-serif'}}>ADMIN</span>
         </div>
         <div style={{display:'flex',gap:8}}>
-          <button onClick={()=>setAddOpen(true)} style={{background:C.gold,color:C.black,padding:'6px 13px',borderRadius:6,fontSize:10,fontWeight:700,fontFamily:'Syne,sans-serif',border:'none',cursor:'pointer'}}>+ Invite Student</button>
+          <button onClick={()=>setAddOpen(true)} style={{background:C.gold,color:C.black,padding:'6px 13px',borderRadius:6,fontSize:10,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer'}}>+ Invite Student</button>
           <button onClick={()=>sb.auth.signOut()} style={{background:'none',border:`1px solid ${C.border}`,color:C.muted,padding:'6px 11px',borderRadius:6,fontSize:10,cursor:'pointer'}}>Sign Out</button>
         </div>
       </header>
@@ -281,14 +283,14 @@ function AdminView({sb, profile}) {
           // Student detail
           <div className="fade">
             <div style={{marginBottom:18}}>
-              <div style={{fontFamily:'Syne,sans-serif',fontSize:20,color:C.white,fontWeight:700}}>{sel.full_name||sel.email}</div>
+              <div style={{fontFamily:'Oswald,sans-serif',fontSize:20,color:C.white,fontWeight:700}}>{sel.full_name||sel.email}</div>
               <div style={{color:C.muted,fontSize:12}}>{sel.email}{sel.cohort?` · Cohort: ${sel.cohort}`:''}</div>
             </div>
             <SL>Pipeline</SL>
             <div style={{display:'flex',gap:9,marginBottom:18}}>
               {CHANNELS.map(ch=>(
                 <div key={ch.id} style={{flex:1,background:C.char,border:`1px solid ${C.border}`,borderTop:`3px solid ${ch.color}`,borderRadius:'0 0 7px 7px',padding:'9px 6px',textAlign:'center'}}>
-                  <div style={{color:ch.color,fontSize:8,fontWeight:800,fontFamily:'Syne,sans-serif',marginBottom:3}}>{ch.key}</div>
+                  <div style={{color:ch.color,fontSize:8,fontWeight:800,fontFamily:'Oswald,sans-serif',marginBottom:3}}>{ch.key}</div>
                   <div style={{color:C.white,fontSize:20,fontWeight:700,fontFamily:'monospace'}}>{chCounts(sel.id)[ch.id]||0}</div>
                 </div>
               ))}
@@ -319,7 +321,7 @@ function AdminView({sb, profile}) {
           // Student list
           <div className="fade">
             <div style={{marginBottom:18}}>
-              <div style={{fontFamily:'Syne,sans-serif',fontSize:20,color:C.gold,fontWeight:700}}>Student Overview</div>
+              <div style={{fontFamily:'Oswald,sans-serif',fontSize:20,color:C.gold,fontWeight:700}}>Student Overview</div>
               <div style={{color:C.muted,fontSize:12}}>{students.length} students</div>
             </div>
             {students.length===0 && <div style={{color:C.muted,fontSize:13,padding:'32px 0',textAlign:'center'}}>No students yet. Invite your first student above.</div>}
@@ -332,7 +334,7 @@ function AdminView({sb, profile}) {
                   <div key={s.id} onClick={()=>setSelected(s.id)} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:10,padding:'13px 15px',cursor:'pointer',transition:'border-color .15s'}} onMouseEnter={e=>e.currentTarget.style.borderColor=C.gold} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:9}}>
                       <div>
-                        <span style={{color:C.white,fontWeight:600,fontSize:14,fontFamily:'Syne,sans-serif'}}>{s.full_name||s.email}</span>
+                        <span style={{color:C.white,fontWeight:600,fontSize:14,fontFamily:'Oswald,sans-serif'}}>{s.full_name||s.email}</span>
                         {s.cohort&&<span style={{color:C.muted,fontSize:10,marginLeft:8}}>Cohort {s.cohort}</span>}
                       </div>
                       <div style={{display:'flex',gap:12,alignItems:'center'}}>
@@ -344,7 +346,7 @@ function AdminView({sb, profile}) {
                     <div style={{display:'flex',gap:5}}>
                       {CHANNELS.map(ch=>(
                         <div key={ch.id} style={{flex:1,textAlign:'center',background:C.mid,borderRadius:4,padding:'4px 0',borderTop:`2px solid ${ch.color}`}}>
-                          <div style={{color:ch.color,fontSize:7,fontWeight:700,fontFamily:'Syne,sans-serif'}}>{ch.key}</div>
+                          <div style={{color:ch.color,fontSize:7,fontWeight:700,fontFamily:'Oswald,sans-serif'}}>{ch.key}</div>
                           <div style={{color:C.white,fontSize:13,fontWeight:700,fontFamily:'monospace'}}>{counts[ch.id]||0}</div>
                         </div>
                       ))}
@@ -482,7 +484,7 @@ function PipelineApp({sb, profile}) {
       {confirmDel && (
         <Overlay onClose={()=>setConfirmDel(null)}>
           <div style={{textAlign:'center'}}>
-            <div style={{fontFamily:'Syne,sans-serif',fontSize:17,color:C.white,fontWeight:700,marginBottom:8}}>Remove Prospect?</div>
+            <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,color:C.white,fontWeight:700,marginBottom:8}}>Remove Prospect?</div>
             <div style={{color:C.muted,fontSize:12,marginBottom:20}}>Permanently deletes {prospects.find(p=>p.id===confirmDel)?.name} and all touch history.</div>
             <div style={{display:'flex',gap:8}}>
               <GhostBtn full onClick={()=>setConfirmDel(null)}>Cancel</GhostBtn>
@@ -496,15 +498,16 @@ function PipelineApp({sb, profile}) {
       <header style={{background:C.dark,borderBottom:`1px solid ${C.border}`,padding:'0 18px',display:'flex',alignItems:'center',justifyContent:'space-between',height:54,position:'sticky',top:0,zIndex:200}}>
         <div style={{display:'flex',alignItems:'center',gap:9}}>
           {view!=='pipeline'&&<button onClick={()=>setView('pipeline')} style={{background:'none',border:'none',color:C.muted,fontSize:18,cursor:'pointer',padding:'0 3px'}}>←</button>}
-          <span style={{fontFamily:'Syne,sans-serif',color:C.gold,fontSize:15,fontWeight:700}}>ICE Pipeline™</span>
+          <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:28,height:28}} />
+          <span style={{fontFamily:'Oswald,sans-serif',color:C.gold,fontSize:15,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
         </div>
         <div style={{display:'flex',gap:6,alignItems:'center'}}>
           {['pipeline','daily'].map(v=>(
-            <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.gold:'none',color:view===v?C.black:C.muted,padding:'4px 10px',borderRadius:5,fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:`1px solid ${view===v?C.gold:C.border}`,cursor:'pointer',fontFamily:'Syne,sans-serif',transition:'all .15s'}}>
+            <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.gold:'none',color:view===v?C.black:C.muted,padding:'4px 10px',borderRadius:5,fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:`1px solid ${view===v?C.gold:C.border}`,cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s'}}>
               {v==='pipeline'?'Pipeline':'Daily'}
             </button>
           ))}
-          <button onClick={()=>setAddOpen(true)} style={{background:C.gold,color:C.black,padding:'5px 12px',borderRadius:5,fontSize:9,fontWeight:800,fontFamily:'Syne,sans-serif',border:'none',cursor:'pointer',marginLeft:3}}>＋ Add</button>
+          <button onClick={()=>setAddOpen(true)} style={{background:C.gold,color:C.black,padding:'5px 12px',borderRadius:5,fontSize:9,fontWeight:800,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',marginLeft:3}}>＋ Add</button>
           <button onClick={()=>sb.auth.signOut()} title="Sign out" style={{background:'none',border:`1px solid ${C.border}`,color:C.muted,padding:'4px 9px',borderRadius:5,fontSize:9,cursor:'pointer'}}>↪</button>
         </div>
       </header>
@@ -536,7 +539,7 @@ function PipelineApp({sb, profile}) {
           <div style={{display:'flex',gap:6,marginBottom:12,flexWrap:'wrap',alignItems:'center'}}>
             <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search…" style={{background:C.char,border:`1px solid ${C.border}`,color:C.text,padding:'4px 9px',borderRadius:4,fontSize:10,width:140,outline:'none'}}/>
             {CHANNELS.map(ch=>(
-              <button key={ch.id} onClick={()=>setFilterCh(filterCh===ch.id?null:ch.id)} style={{background:filterCh===ch.id?ch.color:C.char,color:filterCh===ch.id?C.black:C.dim,border:`1px solid ${filterCh===ch.id?ch.color:C.border}`,padding:'3px 7px',borderRadius:4,fontSize:8,fontWeight:700,cursor:'pointer',fontFamily:'Syne,sans-serif',transition:'all .12s'}}>
+              <button key={ch.id} onClick={()=>setFilterCh(filterCh===ch.id?null:ch.id)} style={{background:filterCh===ch.id?ch.color:C.char,color:filterCh===ch.id?C.black:C.dim,border:`1px solid ${filterCh===ch.id?ch.color:C.border}`,padding:'3px 7px',borderRadius:4,fontSize:8,fontWeight:700,cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .12s'}}>
                 {ch.key} {chCount(ch.id)}
               </button>
             ))}
@@ -557,8 +560,8 @@ function PipelineApp({sb, profile}) {
                   <div style={{background:C.mid,padding:'9px 10px',borderBottom:`2px solid ${ch.color}`}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
                       <div style={{display:'flex',alignItems:'center',gap:4}}>
-                        <span style={{background:ch.color,color:C.black,fontSize:7,fontWeight:800,padding:'1px 3px',borderRadius:2,fontFamily:'Syne,sans-serif'}}>{ch.key}</span>
-                        <span style={{color:C.white,fontSize:10,fontWeight:600,fontFamily:'Syne,sans-serif'}}>{ch.name}</span>
+                        <span style={{background:ch.color,color:C.black,fontSize:7,fontWeight:800,padding:'1px 3px',borderRadius:2,fontFamily:'Oswald,sans-serif'}}>{ch.key}</span>
+                        <span style={{color:C.white,fontSize:10,fontWeight:600,fontFamily:'Oswald,sans-serif'}}>{ch.name}</span>
                       </div>
                       <div style={{display:'flex',alignItems:'center',gap:3}}>
                         <span style={{color:C.gold,fontWeight:700,fontSize:13,fontFamily:'monospace'}}>{chCount(ch.id)}</span>
@@ -571,7 +574,7 @@ function PipelineApp({sb, profile}) {
 
                   {open && (
                     <div style={{background:'#0b0d12',borderBottom:`1px solid ${C.border}`,padding:'9px 10px',maxHeight:240,overflowY:'auto'}} className="fade">
-                      <div style={{color:ch.color,fontSize:7,fontWeight:700,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:6,fontFamily:'Syne,sans-serif'}}>Script</div>
+                      <div style={{color:ch.color,fontSize:7,fontWeight:700,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:6,fontFamily:'Oswald,sans-serif'}}>Script</div>
                       <pre style={{color:'#6a7a8a',fontSize:8,whiteSpace:'pre-wrap',lineHeight:1.65,fontFamily:'monospace'}}>{ch.script}</pre>
                     </div>
                   )}
@@ -617,7 +620,7 @@ function PipelineApp({sb, profile}) {
       {/* ═══ DAILY ═══ */}
       {view==='daily' && (
         <div style={{padding:'20px 20px 48px',maxWidth:740,margin:'0 auto'}} className="fade">
-          <div style={{fontFamily:'Syne,sans-serif',fontSize:22,color:C.gold,fontWeight:700,marginBottom:2}}>Daily Workflow</div>
+          <div style={{fontFamily:'Oswald,sans-serif',fontSize:22,color:C.gold,fontWeight:700,marginBottom:2}}>Daily Workflow</div>
           <div style={{color:C.muted,fontSize:11,marginBottom:22}}>{new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
 
           <SL>60-Minute Power Hour</SL>
@@ -631,7 +634,7 @@ function PipelineApp({sb, profile}) {
             <div key={i} style={{display:'flex',gap:11,marginBottom:8}}>
               <div style={{width:60,flexShrink:0,color:s.color,fontFamily:'monospace',fontSize:8,paddingTop:10,textAlign:'right'}}>{s.time}</div>
               <div style={{flex:1,background:C.char,border:`1px solid ${s.color}33`,borderLeft:`3px solid ${s.color}`,borderRadius:'0 7px 7px 0',padding:'8px 11px'}}>
-                <div style={{color:C.white,fontWeight:600,fontSize:12,fontFamily:'Syne,sans-serif'}}>{s.task}</div>
+                <div style={{color:C.white,fontWeight:600,fontSize:12,fontFamily:'Oswald,sans-serif'}}>{s.task}</div>
                 <div style={{color:C.muted,fontSize:10,marginTop:2,lineHeight:1.5}}>{s.d}</div>
               </div>
             </div>
@@ -659,7 +662,7 @@ function PipelineApp({sb, profile}) {
           <div style={{display:'flex',gap:7}}>
             {CHANNELS.map(ch=>(
               <div key={ch.id} style={{flex:1,background:C.char,border:`1px solid ${C.border}`,borderTop:`3px solid ${ch.color}`,borderRadius:'0 0 6px 6px',padding:'8px 5px',textAlign:'center'}}>
-                <div style={{color:ch.color,fontSize:7,fontWeight:800,fontFamily:'Syne,sans-serif',marginBottom:2}}>{ch.key}</div>
+                <div style={{color:ch.color,fontSize:7,fontWeight:800,fontFamily:'Oswald,sans-serif',marginBottom:2}}>{ch.key}</div>
                 <div style={{color:C.white,fontSize:18,fontWeight:700,fontFamily:'monospace'}}>{chCount(ch.id)}</div>
               </div>
             ))}
@@ -674,11 +677,11 @@ function PipelineApp({sb, profile}) {
           <div style={{padding:'20px',maxWidth:640,margin:'0 auto'}} className="fade">
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:18}}>
               <div>
-                <div style={{fontFamily:'Syne,sans-serif',fontSize:20,color:C.white,fontWeight:700}}>{p.name}</div>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:20,color:C.white,fontWeight:700}}>{p.name}</div>
                 <div style={{color:C.muted,fontSize:11}}>{p.handle}{p.source?` · via ${p.source}`:''}</div>
               </div>
               <div style={{display:'flex',gap:6}}>
-                <button onClick={()=>setTouchFor(p.id)} style={{background:C.gold,color:C.black,padding:'6px 12px',borderRadius:6,fontSize:10,fontWeight:700,fontFamily:'Syne,sans-serif',border:'none',cursor:'pointer'}}>+ Touch</button>
+                <button onClick={()=>setTouchFor(p.id)} style={{background:C.gold,color:C.black,padding:'6px 12px',borderRadius:6,fontSize:10,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer'}}>+ Touch</button>
                 <button onClick={()=>setConfirmDel(p.id)} style={{background:C.red+'22',color:C.red,padding:'6px 9px',borderRadius:6,fontSize:10,border:'none',cursor:'pointer'}}>✕</button>
               </div>
             </div>
@@ -688,10 +691,10 @@ function PipelineApp({sb, profile}) {
                 <SL small>Channel</SL>
                 <div style={{display:'flex',flexWrap:'wrap',gap:3,marginBottom:6}}>
                   {CHANNELS.map(c=>(
-                    <button key={c.id} onClick={()=>moveProspect(p.id,c.id)} style={{background:p.channel===c.id?c.color:C.light,color:p.channel===c.id?C.black:C.dim,padding:'3px 6px',borderRadius:3,fontSize:8,fontWeight:700,fontFamily:'Syne,sans-serif',border:'none',cursor:'pointer',transition:'all .12s'}}>{c.key}</button>
+                    <button key={c.id} onClick={()=>moveProspect(p.id,c.id)} style={{background:p.channel===c.id?c.color:C.light,color:p.channel===c.id?C.black:C.dim,padding:'3px 6px',borderRadius:3,fontSize:8,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',transition:'all .12s'}}>{c.key}</button>
                   ))}
                 </div>
-                <div style={{color:ch.color,fontSize:10,fontWeight:600,fontFamily:'Syne,sans-serif'}}>{ch.name}</div>
+                <div style={{color:ch.color,fontSize:10,fontWeight:600,fontFamily:'Oswald,sans-serif'}}>{ch.name}</div>
                 <div style={{color:C.muted,fontSize:8,marginTop:1,lineHeight:1.4}}>{ch.tagline}</div>
               </div>
               <div style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:8,padding:12}}>
@@ -703,7 +706,7 @@ function PipelineApp({sb, profile}) {
             </div>
 
             <div style={{background:'#0b0d12',border:`1px solid ${ch.color}33`,borderLeft:`3px solid ${ch.color}`,borderRadius:'0 8px 8px 0',padding:'11px 13px',marginBottom:14}}>
-              <div style={{color:ch.color,fontSize:7,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:7,fontFamily:'Syne,sans-serif'}}>📋 Script — {ch.name}</div>
+              <div style={{color:ch.color,fontSize:7,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:7,fontFamily:'Oswald,sans-serif'}}>📋 Script — {ch.name}</div>
               <pre style={{color:'#6a7a8a',fontSize:8,whiteSpace:'pre-wrap',lineHeight:1.7,fontFamily:'monospace'}}>{ch.script}</pre>
             </div>
 
@@ -746,7 +749,7 @@ function PipelineApp({sb, profile}) {
 // ─── SHARED UI ────────────────────────────────────────────────
 function GlobalStyles() {
   return <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html,body{background:${C.black};color:${C.text};font-family:'Inter',sans-serif;min-height:100vh}
     ::-webkit-scrollbar{width:4px;height:4px}
@@ -764,7 +767,7 @@ function Splash({children}) {
 }
 
 function Toast({msg}) {
-  return <div style={{position:'fixed',top:14,right:14,zIndex:9999,background:C.gold,color:C.black,padding:'7px 14px',borderRadius:6,fontSize:11,fontWeight:700,fontFamily:'Syne,sans-serif',boxShadow:'0 4px 20px rgba(0,0,0,.5)',animation:'fade .2s ease'}}>{msg}</div>
+  return <div style={{position:'fixed',top:14,right:14,zIndex:9999,background:C.gold,color:C.black,padding:'7px 14px',borderRadius:6,fontSize:11,fontWeight:700,fontFamily:'Oswald,sans-serif',boxShadow:'0 4px 20px rgba(0,0,0,.5)',animation:'fade .2s ease'}}>{msg}</div>
 }
 
 function Overlay({children,onClose}) {
@@ -776,11 +779,11 @@ function Overlay({children,onClose}) {
 }
 
 function SL({children,small}) {
-  return <div style={{color:C.muted,fontSize:small?7:8,textTransform:'uppercase',letterSpacing:'.5px',fontWeight:700,marginBottom:small?4:8,fontFamily:'Syne,sans-serif'}}>{children}</div>
+  return <div style={{color:C.muted,fontSize:small?7:8,textTransform:'uppercase',letterSpacing:'.5px',fontWeight:700,marginBottom:small?4:8,fontFamily:'Oswald,sans-serif'}}>{children}</div>
 }
 
 function GoldBtn({children,onClick,full,style:s={}}) {
-  return <button onClick={onClick} style={{flex:full?1:undefined,background:C.gold,color:C.black,border:'none',padding:'8px 11px',borderRadius:6,fontSize:11,fontWeight:700,fontFamily:'Syne,sans-serif',width:full?'100%':undefined,cursor:'pointer',...s}}>{children}</button>
+  return <button onClick={onClick} style={{flex:full?1:undefined,background:C.gold,color:C.black,border:'none',padding:'8px 11px',borderRadius:6,fontSize:11,fontWeight:700,fontFamily:'Oswald,sans-serif',width:full?'100%':undefined,cursor:'pointer',...s}}>{children}</button>
 }
 
 function GhostBtn({children,onClick,full}) {
@@ -806,7 +809,7 @@ function AddForm({onSubmit,onCancel,saving}) {
   const ok=f.name.trim()&&f.handle.trim()
   return (
     <>
-      <div style={{fontFamily:'Syne,sans-serif',fontSize:17,color:C.gold,fontWeight:700,marginBottom:14}}>Add Prospect</div>
+      <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,color:C.gold,fontWeight:700,marginBottom:14}}>Add Prospect</div>
       {[{k:'name',l:'Full Name *',ph:'Jane Smith'},{k:'handle',l:'Handle *',ph:'@janesmith'},{k:'source',l:'Where Found',ph:'hashtag, referral…'}].map(row=>(
         <div key={row.k} style={{marginBottom:10}}>
           <SL small>{row.l}</SL>
@@ -817,7 +820,7 @@ function AddForm({onSubmit,onCancel,saving}) {
         <SL small>Starting Channel</SL>
         <div style={{display:'flex',gap:3}}>
           {CHANNELS.map(ch=>(
-            <button key={ch.id} onClick={()=>set('channel',String(ch.id))} style={{flex:1,background:f.channel===String(ch.id)?ch.color:C.mid,color:f.channel===String(ch.id)?C.black:C.dim,border:`1px solid ${f.channel===String(ch.id)?ch.color:C.border}`,padding:'5px 0',borderRadius:4,fontSize:8,fontWeight:700,fontFamily:'Syne,sans-serif',cursor:'pointer',transition:'all .12s'}}>{ch.key}</button>
+            <button key={ch.id} onClick={()=>set('channel',String(ch.id))} style={{flex:1,background:f.channel===String(ch.id)?ch.color:C.mid,color:f.channel===String(ch.id)?C.black:C.dim,border:`1px solid ${f.channel===String(ch.id)?ch.color:C.border}`,padding:'5px 0',borderRadius:4,fontSize:8,fontWeight:700,fontFamily:'Oswald,sans-serif',cursor:'pointer',transition:'all .12s'}}>{ch.key}</button>
           ))}
         </div>
       </div>
@@ -848,7 +851,7 @@ function TouchForm({prospect,onSubmit,onCancel}) {
   const types=[...new Set([...(ch?.touchTypes||[]),'Value-add message','Lead magnet sent','Soft offer sent','Objection handled','Discovery call booked','Sale closed','Follow-up touch','Story reaction','Comment left','Liked posts'])]
   return (
     <>
-      <div style={{fontFamily:'Syne,sans-serif',fontSize:17,color:C.gold,fontWeight:700,marginBottom:4}}>Log Touch</div>
+      <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,color:C.gold,fontWeight:700,marginBottom:4}}>Log Touch</div>
       <div style={{color:C.muted,fontSize:10,marginBottom:12}}>{prospect?.name} · <span style={{color:ch?.color}}>{ch?.name}</span></div>
       <SL small>Touch Type</SL>
       <div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:12}}>
@@ -874,7 +877,7 @@ function InviteForm({onSubmit,onCancel}) {
   const ok=f.email.trim()&&f.fullName.trim()&&f.password.length>=6
   return (
     <>
-      <div style={{fontFamily:'Syne,sans-serif',fontSize:17,color:C.gold,fontWeight:700,marginBottom:14}}>Invite Student</div>
+      <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,color:C.gold,fontWeight:700,marginBottom:14}}>Invite Student</div>
       {[{k:'fullName',l:'Full Name *',ph:'Jane Smith'},{k:'email',l:'Email *',ph:'jane@example.com',t:'email'},{k:'password',l:'Temp Password *',ph:'Min 6 characters',t:'password'},{k:'cohort',l:'Cohort (optional)',ph:'Spring 2025…'}].map(row=>(
         <div key={row.k} style={{marginBottom:10}}>
           <SL small>{row.l}</SL>
