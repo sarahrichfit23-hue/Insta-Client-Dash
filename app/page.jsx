@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '../lib/supabase'
+import { createClient } from '@/lib/supabase'
 
 // ─── BRAND ────────────────────────────────────────────────────
 const C = {
