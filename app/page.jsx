@@ -268,12 +268,12 @@ function AdminView({sb, profile}) {
         <div style={{display:'flex',alignItems:'center',gap:10}}>
           {selected && <button onClick={()=>setSelected(null)} style={{background:'none',border:'none',color:C.muted,fontSize:20,cursor:'pointer'}}>←</button>}
           <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:32,height:32}} />
-          <span style={{fontFamily:'Oswald,sans-serif',color:C.gold,fontSize:16,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
-          <span style={{background:C.gold,color:C.black,fontSize:8,fontWeight:800,padding:'2px 5px',borderRadius:3,fontFamily:'Oswald,sans-serif'}}>ADMIN</span>
+          <span style={{fontFamily:'Oswald,sans-serif',color:C.gold,fontSize:18,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
+          <span style={{background:C.gold,color:C.black,fontSize:11,fontWeight:800,padding:'2px 5px',borderRadius:3,fontFamily:'Oswald,sans-serif'}}>ADMIN</span>
         </div>
         <div style={{display:'flex',gap:8}}>
-          <button onClick={()=>setAddOpen(true)} style={{background:C.gold,color:C.black,padding:'6px 13px',borderRadius:6,fontSize:10,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer'}}>+ Invite Student</button>
-          <button onClick={()=>sb.auth.signOut()} style={{background:'none',border:`1px solid ${C.border}`,color:C.muted,padding:'6px 11px',borderRadius:6,fontSize:10,cursor:'pointer'}}>Sign Out</button>
+          <button onClick={()=>setAddOpen(true)} style={{background:C.gold,color:C.black,padding:'8px 15px',borderRadius:6,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer'}}>+ Invite Student</button>
+          <button onClick={()=>sb.auth.signOut()} style={{background:'none',border:`1px solid ${C.border}`,color:C.muted,padding:'8px 13px',borderRadius:6,fontSize:13,cursor:'pointer'}}>Sign Out</button>
         </div>
       </header>
 
@@ -290,8 +290,8 @@ function AdminView({sb, profile}) {
             <div style={{display:'flex',gap:9,marginBottom:18}}>
               {CHANNELS.map(ch=>(
                 <div key={ch.id} style={{flex:1,background:C.char,border:`1px solid ${C.border}`,borderTop:`3px solid ${ch.color}`,borderRadius:'0 0 7px 7px',padding:'9px 6px',textAlign:'center'}}>
-                  <div style={{color:ch.color,fontSize:8,fontWeight:800,fontFamily:'Oswald,sans-serif',marginBottom:3}}>{ch.key}</div>
-                  <div style={{color:C.white,fontSize:20,fontWeight:700,fontFamily:'monospace'}}>{chCounts(sel.id)[ch.id]||0}</div>
+                  <div style={{color:ch.color,fontSize:11,fontWeight:800,fontFamily:'Oswald,sans-serif',marginBottom:3}}>{ch.key}</div>
+                  <div style={{color:C.white,fontSize:24,fontWeight:700,fontFamily:'monospace'}}>{chCounts(sel.id)[ch.id]||0}</div>
                 </div>
               ))}
             </div>
@@ -306,11 +306,11 @@ function AdminView({sb, profile}) {
                 const intent=INTENT.find(i=>i.id===p.intent)
                 return (
                   <div key={p.id} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:7,padding:'8px 12px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <div><span style={{color:C.white,fontSize:13,fontWeight:600}}>{p.name}</span><span style={{color:C.muted,fontSize:11,marginLeft:8}}>{p.handle}</span></div>
+                    <div><span style={{color:C.white,fontSize:15,fontWeight:600}}>{p.name}</span><span style={{color:C.muted,fontSize:13,marginLeft:8}}>{p.handle}</span></div>
                     <div style={{display:'flex',gap:6,alignItems:'center'}}>
-                      {intent&&<span style={{fontSize:11}}>{intent.emoji}</span>}
-                      <span style={{background:ch?.color+'33',color:ch?.color,fontSize:8,fontWeight:700,padding:'2px 5px',borderRadius:3}}>{ch?.key}</span>
-                      <span style={{color:C.muted,fontSize:9,fontFamily:'monospace'}}>{fmtDate(p.added_date||p.created_at)}</span>
+                      {intent&&<span style={{fontSize:14}}>{intent.emoji}</span>}
+                      <span style={{background:ch?.color+'33',color:ch?.color,fontSize:11,fontWeight:700,padding:'2px 5px',borderRadius:3}}>{ch?.key}</span>
+                      <span style={{color:C.muted,fontSize:11,fontFamily:'monospace'}}>{fmtDate(p.added_date||p.created_at)}</span>
                     </div>
                   </div>
                 )
@@ -334,20 +334,20 @@ function AdminView({sb, profile}) {
                   <div key={s.id} onClick={()=>setSelected(s.id)} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:10,padding:'13px 15px',cursor:'pointer',transition:'border-color .15s'}} onMouseEnter={e=>e.currentTarget.style.borderColor=C.gold} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:9}}>
                       <div>
-                        <span style={{color:C.white,fontWeight:600,fontSize:14,fontFamily:'Oswald,sans-serif'}}>{s.full_name||s.email}</span>
-                        {s.cohort&&<span style={{color:C.muted,fontSize:10,marginLeft:8}}>Cohort {s.cohort}</span>}
+                        <span style={{color:C.white,fontWeight:600,fontSize:16,fontFamily:'Oswald,sans-serif'}}>{s.full_name||s.email}</span>
+                        {s.cohort&&<span style={{color:C.muted,fontSize:13,marginLeft:8}}>Cohort {s.cohort}</span>}
                       </div>
                       <div style={{display:'flex',gap:12,alignItems:'center'}}>
-                        <span style={{color:C.muted,fontSize:10}}>{total} prospects</span>
-                        <span style={{color:tm.dms>0?C.gold:C.muted,fontSize:10}}>Today: {tm.dms} DMs · {tm.sales} sales</span>
-                        <span style={{color:C.gold,fontSize:14}}>→</span>
+                        <span style={{color:C.muted,fontSize:13}}>{total} prospects</span>
+                        <span style={{color:tm.dms>0?C.gold:C.muted,fontSize:13}}>Today: {tm.dms} DMs · {tm.sales} sales</span>
+                        <span style={{color:C.gold,fontSize:16}}>→</span>
                       </div>
                     </div>
                     <div style={{display:'flex',gap:5}}>
                       {CHANNELS.map(ch=>(
                         <div key={ch.id} style={{flex:1,textAlign:'center',background:C.mid,borderRadius:4,padding:'4px 0',borderTop:`2px solid ${ch.color}`}}>
-                          <div style={{color:ch.color,fontSize:7,fontWeight:700,fontFamily:'Oswald,sans-serif'}}>{ch.key}</div>
-                          <div style={{color:C.white,fontSize:13,fontWeight:700,fontFamily:'monospace'}}>{counts[ch.id]||0}</div>
+                          <div style={{color:ch.color,fontSize:10,fontWeight:700,fontFamily:'Oswald,sans-serif'}}>{ch.key}</div>
+                          <div style={{color:C.white,fontSize:16,fontWeight:700,fontFamily:'monospace'}}>{counts[ch.id]||0}</div>
                         </div>
                       ))}
                     </div>
@@ -497,18 +497,18 @@ function PipelineApp({sb, profile}) {
       {/* HEADER */}
       <header style={{background:C.dark,borderBottom:`1px solid ${C.border}`,padding:'0 18px',display:'flex',alignItems:'center',justifyContent:'space-between',height:54,position:'sticky',top:0,zIndex:200}}>
         <div style={{display:'flex',alignItems:'center',gap:9}}>
-          {view!=='pipeline'&&<button onClick={()=>setView('pipeline')} style={{background:'none',border:'none',color:C.muted,fontSize:18,cursor:'pointer',padding:'0 3px'}}>←</button>}
-          <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:28,height:28}} />
-          <span style={{fontFamily:'Oswald,sans-serif',color:C.gold,fontSize:15,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
+          {view!=='pipeline'&&<button onClick={()=>setView('pipeline')} style={{background:'none',border:'none',color:C.muted,fontSize:22,cursor:'pointer',padding:'0 3px'}}>←</button>}
+          <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:32,height:32}} />
+          <span style={{fontFamily:'Oswald,sans-serif',color:C.gold,fontSize:17,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
         </div>
         <div style={{display:'flex',gap:6,alignItems:'center'}}>
           {['pipeline','daily'].map(v=>(
-            <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.gold:'none',color:view===v?C.black:C.muted,padding:'4px 10px',borderRadius:5,fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:`1px solid ${view===v?C.gold:C.border}`,cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s'}}>
-              {v==='pipeline'?'Pipeline':'Daily'}
-            </button>
-          ))}
-          <button onClick={()=>setAddOpen(true)} style={{background:C.gold,color:C.black,padding:'5px 12px',borderRadius:5,fontSize:9,fontWeight:800,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',marginLeft:3}}>＋ Add</button>
-          <button onClick={()=>sb.auth.signOut()} title="Sign out" style={{background:'none',border:`1px solid ${C.border}`,color:C.muted,padding:'4px 9px',borderRadius:5,fontSize:9,cursor:'pointer'}}>↪</button>
+              <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.gold:'none',color:view===v?C.black:C.muted,padding:'6px 12px',borderRadius:5,fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:`1px solid ${view===v?C.gold:C.border}`,cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s'}}>
+                {v}
+              </button>
+            ))}
+            <button onClick={()=>setAddOpen(true)} style={{background:C.gold,color:C.black,padding:'7px 14px',borderRadius:5,fontSize:11,fontWeight:800,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',marginLeft:3}}>＋ Add</button>
+            <button onClick={()=>sb.auth.signOut()} title="Sign out" style={{background:'none',border:`1px solid ${C.border}`,color:C.muted,padding:'6px 11px',borderRadius:5,fontSize:12,cursor:'pointer'}}>↪</button>
         </div>
       </header>
 
@@ -537,17 +537,17 @@ function PipelineApp({sb, profile}) {
 
           {/* Filters */}
           <div style={{display:'flex',gap:6,marginBottom:12,flexWrap:'wrap',alignItems:'center'}}>
-            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search…" style={{background:C.char,border:`1px solid ${C.border}`,color:C.text,padding:'4px 9px',borderRadius:4,fontSize:10,width:140,outline:'none'}}/>
+            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search…" style={{background:C.char,border:`1px solid ${C.border}`,color:C.text,padding:'6px 11px',borderRadius:4,fontSize:13,width:160,outline:'none'}}/>
             {CHANNELS.map(ch=>(
-              <button key={ch.id} onClick={()=>setFilterCh(filterCh===ch.id?null:ch.id)} style={{background:filterCh===ch.id?ch.color:C.char,color:filterCh===ch.id?C.black:C.dim,border:`1px solid ${filterCh===ch.id?ch.color:C.border}`,padding:'3px 7px',borderRadius:4,fontSize:8,fontWeight:700,cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .12s'}}>
-                {ch.key} {chCount(ch.id)}
+              <button key={ch.id} onClick={()=>setFilterCh(filterCh===ch.id?null:ch.id)} style={{background:filterCh===ch.id?ch.color:C.char,color:filterCh===ch.id?C.black:C.dim,border:`1px solid ${filterCh===ch.id?ch.color:C.border}`,padding:'5px 9px',borderRadius:4,fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .12s'}}>
+                {ch.key}
               </button>
             ))}
             {INTENT.map(i=>(
-              <button key={i.id} onClick={()=>setFilterInt(filterInt===i.id?null:i.id)} style={{background:filterInt===i.id?i.color+'33':C.char,color:filterInt===i.id?i.color:C.dim,border:`1px solid ${filterInt===i.id?i.color:C.border}`,padding:'3px 7px',borderRadius:4,fontSize:10,cursor:'pointer',transition:'all .12s'}}>{i.emoji}</button>
+              <button key={i.id} onClick={()=>setFilterInt(filterInt===i.id?null:i.id)} style={{background:filterInt===i.id?i.color+'33':C.char,color:filterInt===i.id?i.color:C.dim,border:`1px solid ${filterInt===i.id?i.color:C.border}`,padding:'5px 9px',borderRadius:4,fontSize:13,cursor:'pointer',transition:'all .12s'}}>{i.emoji}</button>
             ))}
-            {(filterCh||filterInt||q)&&<button onClick={()=>{setFilterCh(null);setFilterInt(null);setQ('')}} style={{background:'none',border:'none',color:C.muted,fontSize:9,cursor:'pointer',textDecoration:'underline'}}>Clear</button>}
-            <span style={{marginLeft:'auto',color:C.muted,fontSize:9}}>{visible.length}/{prospects.length}</span>
+            {(filterCh||filterInt||q)&&<button onClick={()=>{setFilterCh(null);setFilterInt(null);setQ('')}} style={{background:'none',border:'none',color:C.muted,fontSize:12,cursor:'pointer',textDecoration:'underline'}}>Clear</button>}
+            <span style={{marginLeft:'auto',color:C.muted,fontSize:12}}>{visible.length}/{prospects.length}</span>
           </div>
 
           {/* Kanban */}
@@ -560,50 +560,50 @@ function PipelineApp({sb, profile}) {
                   <div style={{background:C.mid,padding:'9px 10px',borderBottom:`2px solid ${ch.color}`}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
                       <div style={{display:'flex',alignItems:'center',gap:4}}>
-                        <span style={{background:ch.color,color:C.black,fontSize:7,fontWeight:800,padding:'1px 3px',borderRadius:2,fontFamily:'Oswald,sans-serif'}}>{ch.key}</span>
-                        <span style={{color:C.white,fontSize:10,fontWeight:600,fontFamily:'Oswald,sans-serif'}}>{ch.name}</span>
+                        <span style={{background:ch.color,color:C.black,fontSize:10,fontWeight:800,padding:'2px 5px',borderRadius:2,fontFamily:'Oswald,sans-serif'}}>{ch.key}</span>
+                        <span style={{color:C.white,fontSize:14,fontWeight:600,fontFamily:'Oswald,sans-serif'}}>{ch.name}</span>
                       </div>
                       <div style={{display:'flex',alignItems:'center',gap:3}}>
-                        <span style={{color:C.gold,fontWeight:700,fontSize:13,fontFamily:'monospace'}}>{chCount(ch.id)}</span>
-                        <button onClick={()=>setScriptCh(open?null:ch.id)} style={{background:open?C.gold:C.light,color:open?C.black:C.muted,width:18,height:18,borderRadius:2,fontSize:9,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .12s'}}>📋</button>
+                        <span style={{color:C.gold,fontWeight:700,fontSize:18,fontFamily:'monospace'}}>{chCount(ch.id)}</span>
+                        <button onClick={()=>setScriptCh(open?null:ch.id)} style={{background:open?C.gold:C.light,color:open?C.black:C.muted,width:22,height:22,borderRadius:2,fontSize:12,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .12s'}}>📋</button>
                       </div>
                     </div>
-                    <div style={{color:C.muted,fontSize:7,lineHeight:1.3}}>{ch.tagline}</div>
-                    <div style={{color:ch.color,fontSize:7,marginTop:1,opacity:.8}}>{ch.daily}</div>
+                    <div style={{color:C.muted,fontSize:11,lineHeight:1.3}}>{ch.tagline}</div>
+                    <div style={{color:ch.color,fontSize:11,marginTop:1,opacity:.8}}>{ch.daily}</div>
                   </div>
 
                   {open && (
                     <div style={{background:'#0b0d12',borderBottom:`1px solid ${C.border}`,padding:'9px 10px',maxHeight:240,overflowY:'auto'}} className="fade">
-                      <div style={{color:ch.color,fontSize:7,fontWeight:700,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:6,fontFamily:'Oswald,sans-serif'}}>Script</div>
-                      <pre style={{color:'#6a7a8a',fontSize:8,whiteSpace:'pre-wrap',lineHeight:1.65,fontFamily:'monospace'}}>{ch.script}</pre>
+                      <div style={{color:ch.color,fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:6,fontFamily:'Oswald,sans-serif'}}>Script</div>
+                      <pre style={{color:'#6a7a8a',fontSize:12,whiteSpace:'pre-wrap',lineHeight:1.65,fontFamily:'monospace'}}>{ch.script}</pre>
                     </div>
                   )}
 
                   <div style={{padding:6,display:'flex',flexDirection:'column',gap:5}}>
-                    {cards.length===0&&<div style={{color:C.muted,fontSize:8,textAlign:'center',padding:'10px 0',opacity:.35}}>Empty</div>}
+                    {cards.length===0&&<div style={{color:C.muted,fontSize:12,textAlign:'center',padding:'10px 0',opacity:.35}}>Empty</div>}
                     {cards.map(p=>{
                       const intentCfg=INTENT.find(i=>i.id===p.intent)
                       const pts=pTouches(p.id)
                       const last=pts.length?pts[pts.length-1]:null
                       return (
                         <div key={p.id} onClick={()=>{setFocusId(p.id);setView('detail')}}
-                          style={{background:C.mid,border:`1px solid ${C.border}`,borderRadius:6,padding:'7px 8px',cursor:'pointer',transition:'border-color .12s,transform .1s'}}
+                          style={{background:C.mid,border:`1px solid ${C.border}`,borderRadius:6,padding:'9px 10px',cursor:'pointer',transition:'border-color .12s,transform .1s'}}
                           onMouseEnter={e=>{e.currentTarget.style.borderColor=ch.color;e.currentTarget.style.transform='translateY(-1px)'}}
                           onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.transform='translateY(0)'}}>
                           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:3}}>
                             <div style={{flex:1,minWidth:0}}>
-                              <div style={{color:C.white,fontWeight:600,fontSize:10,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
-                              <div style={{color:C.muted,fontSize:8}}>{p.handle}</div>
+                              <div style={{color:C.white,fontWeight:600,fontSize:14,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
+                              <div style={{color:C.muted,fontSize:12}}>{p.handle}</div>
                             </div>
-                            {intentCfg&&<span style={{fontSize:10,marginLeft:2}}>{intentCfg.emoji}</span>}
+                            {intentCfg&&<span style={{fontSize:14,marginLeft:2}}>{intentCfg.emoji}</span>}
                           </div>
-                          {last&&<div style={{color:C.muted,fontSize:7,marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{last.touch_type} · {fmtDate(last.touch_date)}</div>}
+                          {last&&<div style={{color:C.muted,fontSize:11,marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{last.touch_type} · {fmtDate(last.touch_date)}</div>}
                           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                            <span style={{color:C.muted,fontSize:7}}>{pts.length} touches</span>
+                            <span style={{color:C.muted,fontSize:11}}>{pts.length} touches</span>
                             <div style={{display:'flex',gap:2}}>
-                              {ch.id>1&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id-1)}} style={{background:C.light,color:C.dim,width:14,height:14,borderRadius:2,fontSize:7,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>←</button>}
-                              {ch.id<5&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id+1)}} style={{background:ch.colorDim,color:ch.color,width:14,height:14,borderRadius:2,fontSize:7,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>→</button>}
-                              <button onClick={e=>{e.stopPropagation();setTouchFor(p.id)}} style={{background:C.goldDim,color:C.gold,width:14,height:14,borderRadius:2,fontSize:9,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+                              {ch.id>1&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id-1)}} style={{background:C.light,color:C.dim,width:20,height:20,borderRadius:2,fontSize:11,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>←</button>}
+                              {ch.id<5&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id+1)}} style={{background:ch.colorDim,color:ch.color,width:20,height:20,borderRadius:2,fontSize:11,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>→</button>}
+                              <button onClick={e=>{e.stopPropagation();setTouchFor(p.id)}} style={{background:C.goldDim,color:C.gold,width:20,height:20,borderRadius:2,fontSize:13,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
                             </div>
                           </div>
                         </div>
