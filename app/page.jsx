@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase'
 // ─── BRAND ────────────────────────────────────────────────────
 const C = {
   gold:'#C9A84C', goldDim:'#9d7f37', black:'#1a1a1a', dark:'#2a2a2a',
-  char:'#f5f5f5', mid:'#e8e8e8', light:'#d4d4d4', border:'#c0c0c0',
-  muted:'#666666', dim:'#888888', text:'#2a2a2a', white:'#ffffff',
+  char:'#ffffff', mid:'#f8f8f8', light:'#e8e8e8', border:'#e0e0e0',
+  muted:'#888888', dim:'#aaaaaa', text:'#2a2a2a', white:'#ffffff',
   red:'#C0392B', orange:'#D68910', blue:'#2471A3', green:'#1E8449', purple:'#7D3C98',
 }
 
@@ -187,14 +187,14 @@ function LoginScreen({sb}) {
  <div style={{color:C.muted,fontSize:13,marginTop:5}}>Powered by NextLevel Healthpreneur</div>
         </div>
         <div style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:14,padding:26}}>
-          <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,fontWeight:700,color:C.white,marginBottom:18}}>Sign In</div>
+          <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,fontWeight:700,color:C.text,marginBottom:18}}>Sign In</div>
           {[
             {label:'Email',val:email,set:setEmail,type:'email',ph:'you@example.com'},
             {label:'Password',val:pass,set:setPass,type:'password',ph:'••••••••'},
           ].map(f=>(
             <div key={f.label} style={{marginBottom:12}}>
               <div style={{color:C.muted,fontSize:9,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:5,fontFamily:'Oswald,sans-serif',fontWeight:700}}>{f.label}</div>
-              <input type={f.type} value={f.val} onChange={e=>f.set(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()} placeholder={f.ph} style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.white,padding:'9px 11px',borderRadius:7,fontSize:13,outline:'none'}}/>
+              <input type={f.type} value={f.val} onChange={e=>f.set(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()} placeholder={f.ph} style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.text,padding:'9px 11px',borderRadius:7,fontSize:13,outline:'none'}}/>
             </div>
           ))}
           {err && <div style={{color:C.red,fontSize:11,marginBottom:12,padding:'7px 10px',background:C.red+'11',borderRadius:6}}>{err}</div>}
@@ -283,7 +283,7 @@ function AdminView({sb, profile}) {
           // Student detail
           <div className="fade">
             <div style={{marginBottom:18}}>
-              <div style={{fontFamily:'Oswald,sans-serif',fontSize:20,color:C.white,fontWeight:700}}>{sel.full_name||sel.email}</div>
+              <div style={{fontFamily:'Oswald,sans-serif',fontSize:20,color:C.text,fontWeight:700}}>{sel.full_name||sel.email}</div>
               <div style={{color:C.muted,fontSize:12}}>{sel.email}{sel.cohort?` · Cohort: ${sel.cohort}`:''}</div>
             </div>
             <SL>Pipeline</SL>
@@ -291,7 +291,7 @@ function AdminView({sb, profile}) {
               {CHANNELS.map(ch=>(
                 <div key={ch.id} style={{flex:1,background:C.char,border:`1px solid ${C.border}`,borderTop:`3px solid ${ch.color}`,borderRadius:'0 0 7px 7px',padding:'9px 6px',textAlign:'center'}}>
                   <div style={{color:ch.color,fontSize:11,fontWeight:800,fontFamily:'Oswald,sans-serif',marginBottom:3}}>{ch.key}</div>
-                  <div style={{color:C.white,fontSize:24,fontWeight:700,fontFamily:'monospace'}}>{chCounts(sel.id)[ch.id]||0}</div>
+                  <div style={{color:C.text,fontSize:24,fontWeight:700,fontFamily:'monospace'}}>{chCounts(sel.id)[ch.id]||0}</div>
                 </div>
               ))}
             </div>
@@ -306,7 +306,7 @@ function AdminView({sb, profile}) {
                 const intent=INTENT.find(i=>i.id===p.intent)
                 return (
                   <div key={p.id} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:7,padding:'8px 12px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <div><span style={{color:C.white,fontSize:15,fontWeight:600}}>{p.name}</span><span style={{color:C.muted,fontSize:13,marginLeft:8}}>{p.handle}</span></div>
+                    <div><span style={{color:C.text,fontSize:15,fontWeight:600}}>{p.name}</span><span style={{color:C.muted,fontSize:13,marginLeft:8}}>{p.handle}</span></div>
                     <div style={{display:'flex',gap:6,alignItems:'center'}}>
                       {intent&&<span style={{fontSize:14}}>{intent.emoji}</span>}
                       <span style={{background:ch?.color+'33',color:ch?.color,fontSize:11,fontWeight:700,padding:'2px 5px',borderRadius:3}}>{ch?.key}</span>
@@ -334,7 +334,7 @@ function AdminView({sb, profile}) {
                   <div key={s.id} onClick={()=>setSelected(s.id)} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:10,padding:'13px 15px',cursor:'pointer',transition:'border-color .15s'}} onMouseEnter={e=>e.currentTarget.style.borderColor=C.gold} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:9}}>
                       <div>
-                        <span style={{color:C.white,fontWeight:600,fontSize:16,fontFamily:'Oswald,sans-serif'}}>{s.full_name||s.email}</span>
+                        <span style={{color:C.text,fontWeight:600,fontSize:16,fontFamily:'Oswald,sans-serif'}}>{s.full_name||s.email}</span>
                         {s.cohort&&<span style={{color:C.muted,fontSize:13,marginLeft:8}}>Cohort {s.cohort}</span>}
                       </div>
                       <div style={{display:'flex',gap:12,alignItems:'center'}}>
@@ -347,7 +347,7 @@ function AdminView({sb, profile}) {
                       {CHANNELS.map(ch=>(
                         <div key={ch.id} style={{flex:1,textAlign:'center',background:C.mid,borderRadius:4,padding:'4px 0',borderTop:`2px solid ${ch.color}`}}>
                           <div style={{color:ch.color,fontSize:10,fontWeight:700,fontFamily:'Oswald,sans-serif'}}>{ch.key}</div>
-                          <div style={{color:C.white,fontSize:16,fontWeight:700,fontFamily:'monospace'}}>{counts[ch.id]||0}</div>
+                          <div style={{color:C.text,fontSize:16,fontWeight:700,fontFamily:'monospace'}}>{counts[ch.id]||0}</div>
                         </div>
                       ))}
                     </div>
@@ -484,11 +484,11 @@ function PipelineApp({sb, profile}) {
       {confirmDel && (
         <Overlay onClose={()=>setConfirmDel(null)}>
           <div style={{textAlign:'center'}}>
-            <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,color:C.white,fontWeight:700,marginBottom:8}}>Remove Prospect?</div>
+            <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,color:C.text,fontWeight:700,marginBottom:8}}>Remove Prospect?</div>
             <div style={{color:C.muted,fontSize:12,marginBottom:20}}>Permanently deletes {prospects.find(p=>p.id===confirmDel)?.name} and all touch history.</div>
             <div style={{display:'flex',gap:8}}>
               <GhostBtn full onClick={()=>setConfirmDel(null)}>Cancel</GhostBtn>
-              <GoldBtn full onClick={()=>deleteProspect(confirmDel)} style={{background:C.red,color:C.white}}>Remove</GoldBtn>
+              <GoldBtn full onClick={()=>deleteProspect(confirmDel)} style={{background:C.red,color:C.text}}>Remove</GoldBtn>
             </div>
           </div>
         </Overlay>
@@ -561,7 +561,7 @@ function PipelineApp({sb, profile}) {
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
                       <div style={{display:'flex',alignItems:'center',gap:6}}>
                         <span style={{background:ch.color,color:C.black,fontSize:13,fontWeight:800,padding:'3px 7px',borderRadius:3,fontFamily:'Oswald,sans-serif'}}>{ch.key}</span>
-                        <span style={{color:C.white,fontSize:17,fontWeight:600,fontFamily:'Oswald,sans-serif'}}>{ch.name}</span>
+                        <span style={{color:C.text,fontSize:17,fontWeight:600,fontFamily:'Oswald,sans-serif'}}>{ch.name}</span>
                       </div>
                       <div style={{display:'flex',alignItems:'center',gap:4}}>
                         <span style={{color:C.gold,fontWeight:700,fontSize:22,fontFamily:'monospace'}}>{chCount(ch.id)}</span>
@@ -592,7 +592,7 @@ function PipelineApp({sb, profile}) {
                           onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.transform='translateY(0)'}}>
                           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:4}}>
                             <div style={{flex:1,minWidth:0}}>
-                              <div style={{color:C.white,fontWeight:600,fontSize:16,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
+                              <div style={{color:C.text,fontWeight:600,fontSize:16,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
                               <div style={{color:C.muted,fontSize:14}}>{p.handle}</div>
                             </div>
                             {intentCfg&&<span style={{fontSize:16,marginLeft:2}}>{intentCfg.emoji}</span>}
@@ -634,7 +634,7 @@ function PipelineApp({sb, profile}) {
             <div key={i} style={{display:'flex',gap:11,marginBottom:8}}>
               <div style={{width:60,flexShrink:0,color:s.color,fontFamily:'monospace',fontSize:8,paddingTop:10,textAlign:'right'}}>{s.time}</div>
               <div style={{flex:1,background:C.char,border:`1px solid ${s.color}33`,borderLeft:`3px solid ${s.color}`,borderRadius:'0 7px 7px 0',padding:'8px 11px'}}>
-                <div style={{color:C.white,fontWeight:600,fontSize:12,fontFamily:'Oswald,sans-serif'}}>{s.task}</div>
+                <div style={{color:C.text,fontWeight:600,fontSize:12,fontFamily:'Oswald,sans-serif'}}>{s.task}</div>
                 <div style={{color:C.muted,fontSize:10,marginTop:2,lineHeight:1.5}}>{s.d}</div>
               </div>
             </div>
@@ -663,7 +663,7 @@ function PipelineApp({sb, profile}) {
             {CHANNELS.map(ch=>(
               <div key={ch.id} style={{flex:1,background:C.char,border:`1px solid ${C.border}`,borderTop:`3px solid ${ch.color}`,borderRadius:'0 0 6px 6px',padding:'8px 5px',textAlign:'center'}}>
                 <div style={{color:ch.color,fontSize:7,fontWeight:800,fontFamily:'Oswald,sans-serif',marginBottom:2}}>{ch.key}</div>
-                <div style={{color:C.white,fontSize:18,fontWeight:700,fontFamily:'monospace'}}>{chCount(ch.id)}</div>
+                <div style={{color:C.text,fontSize:18,fontWeight:700,fontFamily:'monospace'}}>{chCount(ch.id)}</div>
               </div>
             ))}
           </div>
@@ -677,7 +677,7 @@ function PipelineApp({sb, profile}) {
           <div style={{padding:'20px',maxWidth:640,margin:'0 auto'}} className="fade">
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:18}}>
               <div>
-                <div style={{fontFamily:'Oswald,sans-serif',fontSize:20,color:C.white,fontWeight:700}}>{p.name}</div>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:20,color:C.text,fontWeight:700}}>{p.name}</div>
                 <div style={{color:C.muted,fontSize:11}}>{p.handle}{p.source?` · via ${p.source}`:''}</div>
               </div>
               <div style={{display:'flex',gap:6}}>
@@ -796,7 +796,7 @@ function MetricsRow({m}) {
       {[['DMs',m.dms],['Replies',m.replies],['Emails',m.emails],['Offers',m.offers],['Sales',m.sales]].map(([l,v])=>(
         <div key={l} style={{flex:1,background:C.mid,border:`1px solid ${C.border}`,borderRadius:5,padding:'6px 3px',textAlign:'center'}}>
           <div style={{color:C.muted,fontSize:7,marginBottom:2}}>{l}</div>
-          <div style={{color:C.white,fontSize:14,fontWeight:700,fontFamily:'monospace'}}>{v||0}</div>
+          <div style={{color:C.text,fontSize:14,fontWeight:700,fontFamily:'monospace'}}>{v||0}</div>
         </div>
       ))}
     </div>
@@ -813,7 +813,7 @@ function AddForm({onSubmit,onCancel,saving}) {
       {[{k:'name',l:'Full Name *',ph:'Jane Smith'},{k:'handle',l:'Handle *',ph:'@janesmith'},{k:'source',l:'Where Found',ph:'hashtag, referral…'}].map(row=>(
         <div key={row.k} style={{marginBottom:10}}>
           <SL small>{row.l}</SL>
-          <input value={f[row.k]} onChange={e=>set(row.k,e.target.value)} placeholder={row.ph} style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.white,padding:'7px 9px',borderRadius:6,fontSize:12}}/>
+          <input value={f[row.k]} onChange={e=>set(row.k,e.target.value)} placeholder={row.ph} style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.text,padding:'7px 9px',borderRadius:6,fontSize:12}}/>
         </div>
       ))}
       <div style={{marginBottom:10}}>
@@ -834,7 +834,7 @@ function AddForm({onSubmit,onCancel,saving}) {
       </div>
       <div style={{marginBottom:14}}>
         <SL small>Notes</SL>
-        <textarea value={f.notes} onChange={e=>set('notes',e.target.value)} placeholder="Pain points, bio detail, what they're working on…" style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.white,padding:'7px 9px',borderRadius:6,fontSize:11,resize:'vertical',minHeight:60,lineHeight:1.5}}/>
+        <textarea value={f.notes} onChange={e=>set('notes',e.target.value)} placeholder="Pain points, bio detail, what they're working on…" style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.text,padding:'7px 9px',borderRadius:6,fontSize:11,resize:'vertical',minHeight:60,lineHeight:1.5}}/>
       </div>
       <div style={{display:'flex',gap:7}}>
         <GhostBtn full onClick={onCancel}>Cancel</GhostBtn>
@@ -861,7 +861,7 @@ function TouchForm({prospect,onSubmit,onCancel}) {
       </div>
       <div style={{marginBottom:14}}>
         <SL small>Note (optional)</SL>
-        <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="What happened? What did they say?" style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.white,padding:'7px 9px',borderRadius:6,fontSize:11,resize:'vertical',minHeight:60,lineHeight:1.5}}/>
+        <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="What happened? What did they say?" style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.text,padding:'7px 9px',borderRadius:6,fontSize:11,resize:'vertical',minHeight:60,lineHeight:1.5}}/>
       </div>
       <div style={{display:'flex',gap:7}}>
         <GhostBtn full onClick={onCancel}>Cancel</GhostBtn>
@@ -881,7 +881,7 @@ function InviteForm({onSubmit,onCancel}) {
       {[{k:'fullName',l:'Full Name *',ph:'Jane Smith'},{k:'email',l:'Email *',ph:'jane@example.com',t:'email'},{k:'password',l:'Temp Password *',ph:'Min 6 characters',t:'password'},{k:'cohort',l:'Cohort (optional)',ph:'Spring 2025…'}].map(row=>(
         <div key={row.k} style={{marginBottom:10}}>
           <SL small>{row.l}</SL>
-          <input type={row.t||'text'} value={f[row.k]} onChange={e=>set(row.k,e.target.value)} placeholder={row.ph} style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.white,padding:'7px 9px',borderRadius:6,fontSize:12}}/>
+          <input type={row.t||'text'} value={f[row.k]} onChange={e=>set(row.k,e.target.value)} placeholder={row.ph} style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.text,padding:'7px 9px',borderRadius:6,fontSize:12}}/>
         </div>
       ))}
       <div style={{color:C.muted,fontSize:9,marginBottom:14,lineHeight:1.5}}>Student logs in with this email + password. Ask them to change their password after first login.</div>
