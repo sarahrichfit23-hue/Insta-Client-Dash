@@ -497,18 +497,18 @@ function PipelineApp({sb, profile}) {
       {/* HEADER */}
       <header style={{background:C.dark,borderBottom:`1px solid ${C.border}`,padding:'0 18px',display:'flex',alignItems:'center',justifyContent:'space-between',height:54,position:'sticky',top:0,zIndex:200}}>
         <div style={{display:'flex',alignItems:'center',gap:9}}>
-          {view!=='pipeline'&&<button onClick={()=>setView('pipeline')} style={{background:'none',border:'none',color:C.muted,fontSize:22,cursor:'pointer',padding:'0 3px'}}>←</button>}
-          <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:32,height:32}} />
-          <span style={{fontFamily:'Oswald,sans-serif',color:C.gold,fontSize:17,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
+          {view!=='pipeline'&&<button onClick={()=>setView('pipeline')} style={{background:'none',border:'none',color:C.muted,fontSize:24,cursor:'pointer',padding:'0 3px'}}>←</button>}
+          <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:36,height:36}} />
+          <span style={{fontFamily:'Oswald,sans-serif',color:C.gold,fontSize:19,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
         </div>
         <div style={{display:'flex',gap:6,alignItems:'center'}}>
           {['pipeline','daily'].map(v=>(
-              <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.gold:'none',color:view===v?C.black:C.muted,padding:'6px 12px',borderRadius:5,fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:`1px solid ${view===v?C.gold:C.border}`,cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s'}}>
+              <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.gold:'none',color:view===v?C.black:C.muted,padding:'8px 15px',borderRadius:6,fontSize:13,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:`1px solid ${view===v?C.gold:C.border}`,cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s'}}>
                 {v}
               </button>
             ))}
-            <button onClick={()=>setAddOpen(true)} style={{background:C.gold,color:C.black,padding:'7px 14px',borderRadius:5,fontSize:11,fontWeight:800,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',marginLeft:3}}>＋ Add</button>
-            <button onClick={()=>sb.auth.signOut()} title="Sign out" style={{background:'none',border:`1px solid ${C.border}`,color:C.muted,padding:'6px 11px',borderRadius:5,fontSize:12,cursor:'pointer'}}>↪</button>
+            <button onClick={()=>setAddOpen(true)} style={{background:C.gold,color:C.black,padding:'9px 16px',borderRadius:6,fontSize:13,fontWeight:800,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',marginLeft:3}}>＋ Add</button>
+            <button onClick={()=>sb.auth.signOut()} title="Sign out" style={{background:'none',border:`1px solid ${C.border}`,color:C.muted,padding:'8px 13px',borderRadius:6,fontSize:14,cursor:'pointer'}}>↪</button>
         </div>
       </header>
 
@@ -537,17 +537,17 @@ function PipelineApp({sb, profile}) {
 
           {/* Filters */}
           <div style={{display:'flex',gap:6,marginBottom:12,flexWrap:'wrap',alignItems:'center'}}>
-            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search…" style={{background:C.char,border:`1px solid ${C.border}`,color:C.text,padding:'6px 11px',borderRadius:4,fontSize:13,width:160,outline:'none'}}/>
+            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search…" style={{background:C.char,border:`1px solid ${C.border}`,color:C.text,padding:'8px 14px',borderRadius:5,fontSize:15,width:180,outline:'none'}}/>
             {CHANNELS.map(ch=>(
-              <button key={ch.id} onClick={()=>setFilterCh(filterCh===ch.id?null:ch.id)} style={{background:filterCh===ch.id?ch.color:C.char,color:filterCh===ch.id?C.black:C.dim,border:`1px solid ${filterCh===ch.id?ch.color:C.border}`,padding:'5px 9px',borderRadius:4,fontSize:11,fontWeight:700,cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .12s'}}>
+              <button key={ch.id} onClick={()=>setFilterCh(filterCh===ch.id?null:ch.id)} style={{background:filterCh===ch.id?ch.color:C.char,color:filterCh===ch.id?C.black:C.dim,border:`1px solid ${filterCh===ch.id?ch.color:C.border}`,padding:'7px 11px',borderRadius:5,fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .12s'}}>
                 {ch.key}
               </button>
             ))}
             {INTENT.map(i=>(
-              <button key={i.id} onClick={()=>setFilterInt(filterInt===i.id?null:i.id)} style={{background:filterInt===i.id?i.color+'33':C.char,color:filterInt===i.id?i.color:C.dim,border:`1px solid ${filterInt===i.id?i.color:C.border}`,padding:'5px 9px',borderRadius:4,fontSize:13,cursor:'pointer',transition:'all .12s'}}>{i.emoji}</button>
+              <button key={i.id} onClick={()=>setFilterInt(filterInt===i.id?null:i.id)} style={{background:filterInt===i.id?i.color+'33':C.char,color:filterInt===i.id?i.color:C.dim,border:`1px solid ${filterInt===i.id?i.color:C.border}`,padding:'7px 11px',borderRadius:5,fontSize:15,cursor:'pointer',transition:'all .12s'}}>{i.emoji}</button>
             ))}
-            {(filterCh||filterInt||q)&&<button onClick={()=>{setFilterCh(null);setFilterInt(null);setQ('')}} style={{background:'none',border:'none',color:C.muted,fontSize:12,cursor:'pointer',textDecoration:'underline'}}>Clear</button>}
-            <span style={{marginLeft:'auto',color:C.muted,fontSize:12}}>{visible.length}/{prospects.length}</span>
+            {(filterCh||filterInt||q)&&<button onClick={()=>{setFilterCh(null);setFilterInt(null);setQ('')}} style={{background:'none',border:'none',color:C.muted,fontSize:13,cursor:'pointer',textDecoration:'underline'}}>Clear</button>}
+            <span style={{marginLeft:'auto',color:C.muted,fontSize:14}}>{visible.length}/{prospects.length}</span>
           </div>
 
           {/* Kanban */}
@@ -557,53 +557,53 @@ function PipelineApp({sb, profile}) {
               const open=scriptCh===ch.id
               return (
                 <div key={ch.id} style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:10,overflow:'hidden'}}>
-                  <div style={{background:C.mid,padding:'9px 10px',borderBottom:`2px solid ${ch.color}`}}>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
-                      <div style={{display:'flex',alignItems:'center',gap:4}}>
-                        <span style={{background:ch.color,color:C.black,fontSize:10,fontWeight:800,padding:'2px 5px',borderRadius:2,fontFamily:'Oswald,sans-serif'}}>{ch.key}</span>
-                        <span style={{color:C.white,fontSize:14,fontWeight:600,fontFamily:'Oswald,sans-serif'}}>{ch.name}</span>
+                  <div style={{background:C.mid,padding:'12px 12px',borderBottom:`2px solid ${ch.color}`}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+                      <div style={{display:'flex',alignItems:'center',gap:6}}>
+                        <span style={{background:ch.color,color:C.black,fontSize:13,fontWeight:800,padding:'3px 7px',borderRadius:3,fontFamily:'Oswald,sans-serif'}}>{ch.key}</span>
+                        <span style={{color:C.white,fontSize:17,fontWeight:600,fontFamily:'Oswald,sans-serif'}}>{ch.name}</span>
                       </div>
-                      <div style={{display:'flex',alignItems:'center',gap:3}}>
-                        <span style={{color:C.gold,fontWeight:700,fontSize:18,fontFamily:'monospace'}}>{chCount(ch.id)}</span>
-                        <button onClick={()=>setScriptCh(open?null:ch.id)} style={{background:open?C.gold:C.light,color:open?C.black:C.muted,width:22,height:22,borderRadius:2,fontSize:12,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .12s'}}>📋</button>
+                      <div style={{display:'flex',alignItems:'center',gap:4}}>
+                        <span style={{color:C.gold,fontWeight:700,fontSize:22,fontFamily:'monospace'}}>{chCount(ch.id)}</span>
+                        <button onClick={()=>setScriptCh(open?null:ch.id)} style={{background:open?C.gold:C.light,color:open?C.black:C.muted,width:26,height:26,borderRadius:3,fontSize:14,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .12s'}}>📋</button>
                       </div>
                     </div>
-                    <div style={{color:C.muted,fontSize:11,lineHeight:1.3}}>{ch.tagline}</div>
-                    <div style={{color:ch.color,fontSize:11,marginTop:1,opacity:.8}}>{ch.daily}</div>
+                    <div style={{color:C.muted,fontSize:13,lineHeight:1.4}}>{ch.tagline}</div>
+                    <div style={{color:ch.color,fontSize:13,marginTop:2,opacity:.8}}>{ch.daily}</div>
                   </div>
 
                   {open && (
-                    <div style={{background:'#0b0d12',borderBottom:`1px solid ${C.border}`,padding:'9px 10px',maxHeight:240,overflowY:'auto'}} className="fade">
-                      <div style={{color:ch.color,fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:6,fontFamily:'Oswald,sans-serif'}}>Script</div>
-                      <pre style={{color:'#6a7a8a',fontSize:12,whiteSpace:'pre-wrap',lineHeight:1.65,fontFamily:'monospace'}}>{ch.script}</pre>
+                    <div style={{background:'#0b0d12',borderBottom:`1px solid ${C.border}`,padding:'12px 12px',maxHeight:280,overflowY:'auto'}} className="fade">
+                      <div style={{color:ch.color,fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8,fontFamily:'Oswald,sans-serif'}}>Script</div>
+                      <pre style={{color:'#6a7a8a',fontSize:14,whiteSpace:'pre-wrap',lineHeight:1.7,fontFamily:'monospace'}}>{ch.script}</pre>
                     </div>
                   )}
 
-                  <div style={{padding:6,display:'flex',flexDirection:'column',gap:5}}>
-                    {cards.length===0&&<div style={{color:C.muted,fontSize:12,textAlign:'center',padding:'10px 0',opacity:.35}}>Empty</div>}
+                  <div style={{padding:8,display:'flex',flexDirection:'column',gap:7}}>
+                    {cards.length===0&&<div style={{color:C.muted,fontSize:14,textAlign:'center',padding:'14px 0',opacity:.35}}>Empty</div>}
                     {cards.map(p=>{
                       const intentCfg=INTENT.find(i=>i.id===p.intent)
                       const pts=pTouches(p.id)
                       const last=pts.length?pts[pts.length-1]:null
                       return (
                         <div key={p.id} onClick={()=>{setFocusId(p.id);setView('detail')}}
-                          style={{background:C.mid,border:`1px solid ${C.border}`,borderRadius:6,padding:'9px 10px',cursor:'pointer',transition:'border-color .12s,transform .1s'}}
+                          style={{background:C.mid,border:`1px solid ${C.border}`,borderRadius:7,padding:'11px 12px',cursor:'pointer',transition:'border-color .12s,transform .1s'}}
                           onMouseEnter={e=>{e.currentTarget.style.borderColor=ch.color;e.currentTarget.style.transform='translateY(-1px)'}}
                           onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.transform='translateY(0)'}}>
-                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:3}}>
+                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:4}}>
                             <div style={{flex:1,minWidth:0}}>
-                              <div style={{color:C.white,fontWeight:600,fontSize:14,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
-                              <div style={{color:C.muted,fontSize:12}}>{p.handle}</div>
+                              <div style={{color:C.white,fontWeight:600,fontSize:16,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
+                              <div style={{color:C.muted,fontSize:14}}>{p.handle}</div>
                             </div>
-                            {intentCfg&&<span style={{fontSize:14,marginLeft:2}}>{intentCfg.emoji}</span>}
+                            {intentCfg&&<span style={{fontSize:16,marginLeft:2}}>{intentCfg.emoji}</span>}
                           </div>
-                          {last&&<div style={{color:C.muted,fontSize:11,marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{last.touch_type} · {fmtDate(last.touch_date)}</div>}
+                          {last&&<div style={{color:C.muted,fontSize:13,marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{last.touch_type} · {fmtDate(last.touch_date)}</div>}
                           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                            <span style={{color:C.muted,fontSize:11}}>{pts.length} touches</span>
-                            <div style={{display:'flex',gap:2}}>
-                              {ch.id>1&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id-1)}} style={{background:C.light,color:C.dim,width:20,height:20,borderRadius:2,fontSize:11,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>←</button>}
-                              {ch.id<5&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id+1)}} style={{background:ch.colorDim,color:ch.color,width:20,height:20,borderRadius:2,fontSize:11,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>→</button>}
-                              <button onClick={e=>{e.stopPropagation();setTouchFor(p.id)}} style={{background:C.goldDim,color:C.gold,width:20,height:20,borderRadius:2,fontSize:13,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+                            <span style={{color:C.muted,fontSize:13}}>{pts.length} touches</span>
+                            <div style={{display:'flex',gap:3}}>
+                              {ch.id>1&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id-1)}} style={{background:C.light,color:C.dim,width:24,height:24,borderRadius:3,fontSize:13,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>←</button>}
+                              {ch.id<5&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id+1)}} style={{background:ch.colorDim,color:ch.color,width:24,height:24,borderRadius:3,fontSize:13,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>→</button>}
+                              <button onClick={e=>{e.stopPropagation();setTouchFor(p.id)}} style={{background:C.goldDim,color:C.gold,width:24,height:24,borderRadius:3,fontSize:15,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
                             </div>
                           </div>
                         </div>
