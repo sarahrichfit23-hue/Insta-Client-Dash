@@ -172,9 +172,14 @@ function LoginScreen({sb}) {
 
   const login = async () => {
     setErr(''); setBusy(true)
-    const {error} = await sb.auth.signInWithPassword({email, password: pass})
+    console.log('[v0] Attempting login with email:', email)
+    const {data, error} = await sb.auth.signInWithPassword({email, password: pass})
+    console.log('[v0] Login response:', {data, error})
     setBusy(false)
-    if (error) setErr(error.message)
+    if (error) {
+      console.log('[v0] Login error:', error)
+      setErr(error.message)
+    }
   }
 
   return (
@@ -746,7 +751,7 @@ function PipelineApp({sb, profile}) {
   )
 }
 
-// ─── SHARED UI ─────────────���──────────────────────────────────
+// ─── SHARED UI ─────────────���─���────────────────────────────────
 function GlobalStyles() {
   return <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
