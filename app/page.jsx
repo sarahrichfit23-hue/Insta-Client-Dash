@@ -216,25 +216,6 @@ function LoginScreen({sb}) {
         </div>
       </div>
     </div>
-        <div style={{background:C.char,border:`1px solid ${C.border}`,borderRadius:14,padding:26,boxShadow:'0 10px 25px rgba(0,0,0,0.15), 0 4px 10px rgba(0,0,0,0.1)'}}>
-          <div style={{fontFamily:'Oswald,sans-serif',fontSize:17,fontWeight:700,color:C.text,marginBottom:18}}>Sign In</div>
-          {[
-            {label:'Email',val:email,set:setEmail,type:'email',ph:'you@example.com'},
-            {label:'Password',val:pass,set:setPass,type:'password',ph:'••••••••'},
-          ].map(f=>(
-            <div key={f.label} style={{marginBottom:12}}>
-              <div style={{color:C.muted,fontSize:9,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:5,fontFamily:'Oswald,sans-serif',fontWeight:700}}>{f.label}</div>
-              <input type={f.type} value={f.val} onChange={e=>f.set(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()} placeholder={f.ph} style={{width:'100%',background:C.mid,border:`1px solid ${C.border}`,color:C.text,padding:'9px 11px',borderRadius:7,fontSize:13,outline:'none'}}/>
-            </div>
-          ))}
-          {err && <div style={{color:C.red,fontSize:11,marginBottom:12,padding:'7px 10px',background:C.red+'11',borderRadius:6}}>{err}</div>}
-          <button onClick={login} disabled={busy} style={{width:'100%',background:busy?C.muted:C.gold,color:C.black,padding:'10px',borderRadius:7,fontSize:13,fontWeight:700,cursor:busy?'not-allowed':'pointer',fontFamily:'Oswald,sans-serif',border:'none',marginTop:4}}>
-            {busy?'Signing in…':'Sign In →'}
-          </button>
-          <div style={{color:C.muted,fontSize:10,textAlign:'center',marginTop:12,lineHeight:1.5}}>Access is by invitation only.<br/>Contact your coach if you need credentials.</div>
-        </div>
-      </div>
-    </div>
   )
 }
 
