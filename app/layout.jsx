@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'ICE Pipeline™ — Client Acquisition Dashboard',
-  description: '5-Channel Client Pipeline for the Instagram Client Engine Intensive',
+  title: 'Insta Client Engine - Powered by NextLevel Healthpreneur',
+  description: '5-Channel Client Pipeline for the Insta Client Engine',
 }
 export default function RootLayout({ children }) {
   return (
