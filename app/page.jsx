@@ -4,9 +4,9 @@ import { createClient } from '@/lib/supabase'
 
 // ─── BRAND ────────────────────────────────────────────────────
 const C = {
-  gold:'#C9A84C', goldDim:'#6b4f1a', black:'#0A0A0A', dark:'#111111',
-  char:'#171717', mid:'#1E1E1E', light:'#252525', border:'#2E2E2E',
-  muted:'#555555', dim:'#888888', text:'#CCCCCC', white:'#F0EDE6',
+  gold:'#C9A84C', goldDim:'#9d7f37', black:'#1a1a1a', dark:'#2a2a2a',
+  char:'#f5f5f5', mid:'#e8e8e8', light:'#d4d4d4', border:'#c0c0c0',
+  muted:'#666666', dim:'#888888', text:'#2a2a2a', white:'#ffffff',
   red:'#C0392B', orange:'#D68910', blue:'#2471A3', green:'#1E8449', purple:'#7D3C98',
 }
 
@@ -573,9 +573,9 @@ function PipelineApp({sb, profile}) {
                   </div>
 
                   {open && (
-                    <div style={{background:'#0b0d12',borderBottom:`1px solid ${C.border}`,padding:'12px 12px',maxHeight:280,overflowY:'auto'}} className="fade">
+                    <div style={{background:'#fafafa',borderBottom:`1px solid ${C.border}`,padding:'12px 12px',maxHeight:280,overflowY:'auto'}} className="fade">
                       <div style={{color:ch.color,fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8,fontFamily:'Oswald,sans-serif'}}>Script</div>
-                      <pre style={{color:'#6a7a8a',fontSize:14,whiteSpace:'pre-wrap',lineHeight:1.7,fontFamily:'monospace'}}>{ch.script}</pre>
+                      <pre style={{color:'#4a5568',fontSize:14,whiteSpace:'pre-wrap',lineHeight:1.7,fontFamily:'monospace'}}>{ch.script}</pre>
                     </div>
                   )}
 
@@ -705,7 +705,7 @@ function PipelineApp({sb, profile}) {
               </div>
             </div>
 
-            <div style={{background:'#0b0d12',border:`1px solid ${ch.color}33`,borderLeft:`3px solid ${ch.color}`,borderRadius:'0 8px 8px 0',padding:'11px 13px',marginBottom:14}}>
+                <div style={{background:'#fafafa',border:`1px solid ${ch.color}33`,borderLeft:`3px solid ${ch.color}`,borderRadius:'0 8px 8px 0',padding:'11px 13px',marginBottom:14}}>
               <div style={{color:ch.color,fontSize:7,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:7,fontFamily:'Oswald,sans-serif'}}>📋 Script — {ch.name}</div>
               <pre style={{color:'#6a7a8a',fontSize:8,whiteSpace:'pre-wrap',lineHeight:1.7,fontFamily:'monospace'}}>{ch.script}</pre>
             </div>
@@ -746,7 +746,7 @@ function PipelineApp({sb, profile}) {
   )
 }
 
-// ─── SHARED UI ─────────────���──────────────────────────────────
+// ─── SHARED UI ─────────────���─���────────────────────────────────
 function GlobalStyles() {
   return <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
