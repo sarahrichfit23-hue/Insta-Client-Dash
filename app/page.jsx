@@ -4,10 +4,10 @@ import { createClient } from '@/lib/supabase'
 
 // ─── BRAND ────────────────────────────────────────────────────
 const C = {
-  gold:'#E8B931', goldDim:'#d4a526', black:'#1E1E1E', dark:'#2a2a2a',
+  gold:'#F6BD60', goldDim:'#e0a94e', black:'#1E1E1E', dark:'#2a2a2a',
   card:'#2a2a2a', cardInner:'#ffffff', border:'#3a3a3a',
   muted:'#888888', dim:'#aaaaaa', text:'#1a1a1a', white:'#ffffff',
-  bg:'#E8B931',
+  bg:'#F6BD60',
   shadow:'0 8px 24px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15)',
   shadow3d:'0 12px 32px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
   red:'#C0392B', orange:'#D68910', blue:'#2471A3', green:'#1E8449', purple:'#7D3C98',
