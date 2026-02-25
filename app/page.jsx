@@ -515,13 +515,13 @@ function PipelineApp({sb, profile}) {
       {/* HEADER */}
       <header style={{background:C.card,padding:'0 20px',display:'flex',alignItems:'center',justifyContent:'space-between',height:64,position:'sticky',top:0,zIndex:200,boxShadow:'0 4px 16px rgba(0,0,0,0.3)'}}>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
-          {view!=='pipeline'&&<button onClick={()=>setView('pipeline')} style={{background:'none',border:'none',color:C.white,fontSize:26,cursor:'pointer',padding:'0 3px'}}>←</button>}
+          {(view!=='pipeline')&&<button onClick={()=>setView('pipeline')} style={{background:'none',border:'none',color:C.white,fontSize:26,cursor:'pointer',padding:'0 3px'}}>←</button>}
           <img src="/images/nlh-logo.png" alt="NextLevel Healthpreneur" style={{width:38,height:38}} />
           <span style={{fontFamily:'Oswald,sans-serif',color:C.gold,fontSize:22,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          {['pipeline','daily'].map(v=>(
-              <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.gold:'rgba(255,255,255,0.1)',color:view===v?C.black:C.white,padding:'10px 18px',borderRadius:10,fontSize:15,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:view===v?'none':'1px solid rgba(255,255,255,0.2)',cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s',boxShadow:view===v?'0 2px 8px rgba(232,185,49,0.4)':'none'}}>
+          {['pipeline','daily','guide'].map(v=>(
+              <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.gold:'rgba(255,255,255,0.1)',color:view===v?C.black:C.white,padding:'10px 18px',borderRadius:10,fontSize:15,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:view===v?'none':'1px solid rgba(255,255,255,0.2)',cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s',boxShadow:view===v?'0 2px 8px rgba(246,189,96,0.4)':'none'}}>
                 {v}
               </button>
             ))}
@@ -692,6 +692,195 @@ function PipelineApp({sb, profile}) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* GUIDE */}
+      {view==='guide' && (
+        <div style={{padding:'24px 18px 60px',maxWidth:860,margin:'0 auto'}} className="fade">
+          <div style={{fontFamily:'Oswald,sans-serif',fontSize:32,color:C.black,fontWeight:700,marginBottom:6}}>How The Pipeline Works</div>
+          <div style={{fontFamily:'Oswald,sans-serif',fontSize:20,color:C.dark,fontWeight:500,marginBottom:20,opacity:0.7}}>Your Plain English Guide</div>
+
+          <div style={{background:C.card,borderRadius:16,padding:22,boxShadow:C.shadow3d,marginBottom:28}}>
+            <div style={{background:C.cardInner,borderRadius:10,padding:20}}>
+              <p style={{color:C.text,fontSize:17,lineHeight:1.7}}>
+                This dashboard is your client-getting machine. Every person you talk to on Instagram belongs in one of 5 channels.
+                Your only job is to figure out which channel they're in — then do the next right thing. That's it. No guessing. No winging it.
+              </p>
+            </div>
+          </div>
+
+          {/* CH1 */}
+          <div style={{background:C.card,borderRadius:16,padding:20,boxShadow:C.shadow3d,marginBottom:22}}>
+            <div style={{background:C.cardInner,borderRadius:10,padding:20}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+                <span style={{background:C.blue,color:'#fff',fontSize:15,fontWeight:800,padding:'5px 12px',borderRadius:8,fontFamily:'Oswald,sans-serif'}}>CH1</span>
+                <span style={{fontFamily:'Oswald,sans-serif',fontSize:22,fontWeight:700,color:C.text}}>New Arrivals</span>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Who Goes Here</div>
+                <p style={{color:C.text,fontSize:16,lineHeight:1.6}}>Someone just followed you or you just followed them — first contact hasn't happened yet.</p>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Your Goal</div>
+                <p style={{color:C.text,fontSize:16,lineHeight:1.6}}>Open a conversation. That's it. One genuine message to start the relationship.</p>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>What You Say</div>
+                <pre style={{background:'#f5f3ee',border:'1px solid #e8e4db',borderRadius:10,padding:16,fontSize:15,whiteSpace:'pre-wrap',lineHeight:1.6,fontFamily:'monospace',color:C.text,overflowX:'auto'}}>
+{`"Hey [Name]! Thanks for the follow — just checked out your page and love [SPECIFIC OBSERVATION].
+
+Quick question — what brought you over to my corner of Instagram?"`}
+                </pre>
+              </div>
+              <div style={{background:C.blue+'15',border:`1px solid ${C.blue}33`,borderRadius:10,padding:14}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.blue,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>What Happens Next</div>
+                <p style={{color:C.text,fontSize:15,lineHeight:1.6}}>If they reply: move to CH2. If no reply after 48hrs: move to CH4 to warm them up.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* CH2 */}
+          <div style={{background:C.card,borderRadius:16,padding:20,boxShadow:C.shadow3d,marginBottom:22}}>
+            <div style={{background:C.cardInner,borderRadius:10,padding:20}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+                <span style={{background:C.orange,color:'#fff',fontSize:15,fontWeight:800,padding:'5px 12px',borderRadius:8,fontFamily:'Oswald,sans-serif'}}>CH2</span>
+                <span style={{fontFamily:'Oswald,sans-serif',fontSize:22,fontWeight:700,color:C.text}}>Warm Conversations</span>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Who Goes Here</div>
+                <p style={{color:C.text,fontSize:16,lineHeight:1.6}}>They're talking to you. A real conversation is happening — they've replied at least once.</p>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Your Goal</div>
+                <p style={{color:C.text,fontSize:16,lineHeight:1.6}}>Add value and build trust until you can open the sales window. No pitching yet.</p>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>What You Say</div>
+                <pre style={{background:'#f5f3ee',border:'1px solid #e8e4db',borderRadius:10,padding:16,fontSize:15,whiteSpace:'pre-wrap',lineHeight:1.6,fontFamily:'monospace',color:C.text,overflowX:'auto'}}>
+{`VALUE-ADD: "Hey — saw this and thought of what you shared about [their struggle]. Thought it might be useful: [tip or resource]. How's it going with [their goal] this week?"
+
+LEAD MAGNET (after 2-3 exchanges): "Do you have [topic] figured out? Given what you're working on, I think [LEAD MAGNET] would be genuinely useful. Want me to send it over?"
+
+WHEN THEY ASK WHAT YOU DO: "I work with [avatar] who are dealing with [struggle] to help them [result] in [timeframe]. Is that kind of where you are right now?"`}
+                </pre>
+              </div>
+              <div style={{background:C.orange+'15',border:`1px solid ${C.orange}33`,borderRadius:10,padding:14}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.orange,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>What Happens Next</div>
+                <p style={{color:C.text,fontSize:15,lineHeight:1.6}}>If engagement goes 3-5+ exchanges deep: move to CH5. If they go cold: move to CH4.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* CH3 */}
+          <div style={{background:C.card,borderRadius:16,padding:20,boxShadow:C.shadow3d,marginBottom:22}}>
+            <div style={{background:C.cardInner,borderRadius:10,padding:20}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+                <span style={{background:C.purple,color:'#fff',fontSize:15,fontWeight:800,padding:'5px 12px',borderRadius:8,fontFamily:'Oswald,sans-serif'}}>CH3</span>
+                <span style={{fontFamily:'Oswald,sans-serif',fontSize:22,fontWeight:700,color:C.text}}>Cold Activation</span>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Who Goes Here</div>
+                <p style={{color:C.text,fontSize:16,lineHeight:1.6}}>{'New targets who don\'t follow you yet. You found them through hashtags, comments, or referrals.'}</p>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Your Goal</div>
+                <p style={{color:C.text,fontSize:16,lineHeight:1.6}}>Get one reply. Send a personalized curiosity opener that makes them want to respond.</p>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>What You Say</div>
+                <pre style={{background:'#f5f3ee',border:'1px solid #e8e4db',borderRadius:10,padding:16,fontSize:15,whiteSpace:'pre-wrap',lineHeight:1.6,fontFamily:'monospace',color:C.text,overflowX:'auto'}}>
+{`COLD DM: "Hey [Name]! I came across your page through [HOW YOU FOUND THEM] and love what you're doing with [SPECIFIC DETAIL].
+
+I'm curious — [GENUINE QUESTION ABOUT THEIR WORK/CONTENT]?"
+
+Keep it short. Keep it specific. No pitching.`}
+                </pre>
+              </div>
+              <div style={{background:C.purple+'15',border:`1px solid ${C.purple}33`,borderRadius:10,padding:14}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.purple,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>What Happens Next</div>
+                <p style={{color:C.text,fontSize:15,lineHeight:1.6}}>If they reply: move to CH1 or CH2 depending on warmth. If no reply: stay in CH3 for 2-3 follow-up engagements.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* CH4 */}
+          <div style={{background:C.card,borderRadius:16,padding:20,boxShadow:C.shadow3d,marginBottom:22}}>
+            <div style={{background:C.cardInner,borderRadius:10,padding:20}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+                <span style={{background:C.green,color:'#fff',fontSize:15,fontWeight:800,padding:'5px 12px',borderRadius:8,fontFamily:'Oswald,sans-serif'}}>CH4</span>
+                <span style={{fontFamily:'Oswald,sans-serif',fontSize:22,fontWeight:700,color:C.text}}>Warm-Up Engagement</span>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Who Goes Here</div>
+                <p style={{color:C.text,fontSize:16,lineHeight:1.6}}>{"People you haven't DM'd yet, or who've gone cold. They need warming up before you reach out."}</p>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Your Goal</div>
+                <p style={{color:C.text,fontSize:16,lineHeight:1.6}}>Get on their radar. No DMs yet — just genuine engagement with their content.</p>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>What You Do</div>
+                <pre style={{background:'#f5f3ee',border:'1px solid #e8e4db',borderRadius:10,padding:16,fontSize:15,whiteSpace:'pre-wrap',lineHeight:1.6,fontFamily:'monospace',color:C.text,overflowX:'auto'}}>
+{`1. Like 2-3 of their recent posts
+2. Leave one genuine, thoughtful comment
+3. React to their stories
+4. NO DM yet — just get on their radar
+
+Do this for 3-5 days before reaching out.`}
+                </pre>
+              </div>
+              <div style={{background:C.green+'15',border:`1px solid ${C.green}33`,borderRadius:10,padding:14}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.green,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>What Happens Next</div>
+                <p style={{color:C.text,fontSize:15,lineHeight:1.6}}>After 3-5 touches: move to CH3 (cold DM) or CH1 if they follow back.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* CH5 */}
+          <div style={{background:C.card,borderRadius:16,padding:20,boxShadow:C.shadow3d,marginBottom:28}}>
+            <div style={{background:C.cardInner,borderRadius:10,padding:20}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+                <span style={{background:C.red,color:'#fff',fontSize:15,fontWeight:800,padding:'5px 12px',borderRadius:8,fontFamily:'Oswald,sans-serif'}}>CH5</span>
+                <span style={{fontFamily:'Oswald,sans-serif',fontSize:22,fontWeight:700,color:C.text}}>Conversion Touches</span>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Who Goes Here</div>
+                <p style={{color:C.text,fontSize:16,lineHeight:1.6}}>Hot leads. These people have shown real interest — they've engaged deeply and the sales window is open.</p>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Your Goal</div>
+                <p style={{color:C.text,fontSize:16,lineHeight:1.6}}>Diagnose their situation, position your offer, and close. This is where the sale happens.</p>
+              </div>
+              <div style={{marginBottom:12}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>What You Say</div>
+                <pre style={{background:'#f5f3ee',border:'1px solid #e8e4db',borderRadius:10,padding:16,fontSize:15,whiteSpace:'pre-wrap',lineHeight:1.6,fontFamily:'monospace',color:C.text,overflowX:'auto'}}>
+{`DIAGNOSE: "Based on everything you've shared about [their situation], I genuinely think [your offer] would be a great fit. Here's why..."
+
+POSITION: "What I do is help [avatar] go from [current state] to [desired result] in [timeframe]."
+
+CLOSE: "Would it make sense to hop on a quick call so I can walk you through how it works?"
+
+OBJECTION HANDLING: Stay curious. Ask questions. Don't push — pull.`}
+                </pre>
+              </div>
+              <div style={{background:C.red+'15',border:`1px solid ${C.red}33`,borderRadius:10,padding:14}}>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.red,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>What Happens Next</div>
+                <p style={{color:C.text,fontSize:15,lineHeight:1.6}}>Closed = celebrate + archive. Objection = stay in CH5 and handle. Ghost = one follow-up then back to CH2.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Golden Rule */}
+          <div style={{background:C.card,borderRadius:16,padding:20,boxShadow:C.shadow3d}}>
+            <div style={{background:C.gold,borderRadius:10,padding:24,textAlign:'center'}}>
+              <div style={{fontFamily:'Oswald,sans-serif',fontSize:24,fontWeight:700,color:C.black,textTransform:'uppercase',letterSpacing:'1px',marginBottom:12}}>The Golden Rule of the Pipeline</div>
+              <p style={{color:C.black,fontSize:18,lineHeight:1.7,maxWidth:600,margin:'0 auto',fontWeight:500}}>
+                Never pitch from CH1, CH3, or CH4. Those channels exist to earn the right to have the CH5 conversation.
+                Skip the relationship-building and you skip the sale.
+              </p>
+            </div>
           </div>
         </div>
       )}
