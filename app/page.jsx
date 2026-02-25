@@ -397,6 +397,7 @@ function PipelineApp({sb, profile}) {
   const [toast,     setToast]     = useState(null)
   const [confirmDel,setConfirmDel]= useState(null)
   const [saving,    setSaving]    = useState(false)
+  const [aiFor,     setAiFor]     = useState(null)
 
   const pop = (msg) => { setToast(msg); setTimeout(()=>setToast(null),2400) }
   const uid = profile.id
@@ -621,6 +622,7 @@ function PipelineApp({sb, profile}) {
                           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                             <span style={{color:C.muted,fontSize:14}}>{pts.length} touches</span>
                             <div style={{display:'flex',gap:4}}>
+                              <button onClick={e=>{e.stopPropagation();setAiFor({id:p.id,channel:ch.id})}} title="Coach Sarah AI" style={{background:'#6C3483',color:'#fff',width:28,height:28,borderRadius:8,fontSize:15,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(108,52,131,0.3)'}}>&#x1F9E0;</button>
                               {ch.id>1&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id-1)}} style={{background:'#f0f0f0',color:C.text,width:28,height:28,borderRadius:8,fontSize:15,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>←</button>}
                               {ch.id<5&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id+1)}} style={{background:ch.color+'22',color:ch.color,width:28,height:28,borderRadius:8,fontSize:15,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>→</button>}
                               <button onClick={e=>{e.stopPropagation();setTouchFor(p.id)}} style={{background:C.gold,color:C.black,width:28,height:28,borderRadius:8,fontSize:17,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(232,185,49,0.3)'}}>+</button>
@@ -896,6 +898,7 @@ OBJECTION HANDLING: Stay curious. Ask questions. Don't push — pull.`}
                 <div style={{color:C.dark,fontSize:15,opacity:0.7}}>{p.handle}{p.source?` · via ${p.source}`:''}</div>
               </div>
               <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>setAiFor({id:p.id,channel:p.channel})} style={{background:'#6C3483',color:'#fff',padding:'10px 18px',borderRadius:10,fontSize:14,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',boxShadow:'0 2px 8px rgba(108,52,131,0.2)',display:'flex',alignItems:'center',gap:6}}>&#x1F9E0; AI</button>
                 <button onClick={()=>setTouchFor(p.id)} style={{background:C.black,color:C.white,padding:'10px 18px',borderRadius:10,fontSize:14,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,0.2)'}}>+ Touch</button>
                 <button onClick={()=>setConfirmDel(p.id)} style={{background:C.red+'22',color:C.red,padding:'8px 12px',borderRadius:8,fontSize:13,border:'none',cursor:'pointer'}}>✕</button>
               </div>
@@ -965,11 +968,12 @@ OBJECTION HANDLING: Stay curious. Ask questions. Don't push — pull.`}
 
       {addOpen&&<Overlay onClose={()=>setAddOpen(false)}><AddForm onSubmit={addProspect} onCancel={()=>setAddOpen(false)} saving={saving}/></Overlay>}
       {touchFor&&<Overlay onClose={()=>setTouchFor(null)}><TouchForm prospect={prospects.find(p=>p.id===touchFor)} onSubmit={(type,note)=>logTouch(touchFor,type,note)} onCancel={()=>setTouchFor(null)}/></Overlay>}
+      {aiFor&&<Overlay onClose={()=>setAiFor(null)}><AISuggestionForm prospect={prospects.find(p=>p.id===aiFor.id)} channel={aiFor.channel} onClose={()=>setAiFor(null)}/></Overlay>}
     </div>
   )
 }
 
-// ─── SHARED UI ────────────────────────────────────────────────
+// ─── SHARED UI ───────────────────────────────────────────────��
 function GlobalStyles() {
   return <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
@@ -1092,6 +1096,133 @@ function TouchForm({prospect,onSubmit,onCancel}) {
         <GhostBtn full onClick={onCancel}>Cancel</GhostBtn>
         <GoldBtn full onClick={()=>type&&onSubmit(type,note)} style={{background:type?C.gold:'#ccc',color:type?C.black:C.muted,cursor:type?'pointer':'not-allowed'}}>Log Touch</GoldBtn>
       </div>
+    </>
+  )
+}
+
+function AISuggestionForm({prospect, channel, onClose}) {
+  const [convoText, setConvoText] = useState('')
+  const [selChannel, setSelChannel] = useState(channel || 1)
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState(null)
+  const [copied, setCopied] = useState(false)
+
+  const ch = CHANNELS.find(c => c.id === selChannel)
+
+  const handleSubmit = async () => {
+    if (!convoText.trim()) return
+    setLoading(true)
+    setError(null)
+    setResult(null)
+    try {
+      const res = await fetch('/api/ai-suggestion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationText: convoText.trim(), channel: selChannel }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Request failed')
+      setResult(data.suggestion)
+    } catch (err) {
+      setError("Sarah's brain is thinking -- try again in a moment.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const copyResult = () => {
+    if (!result) return
+    navigator.clipboard.writeText(result)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const formatResult = (text) => {
+    return text.split('\n').map((line, i) => {
+      if (line.startsWith('**') && line.endsWith('**')) {
+        const label = line.replace(/\*\*/g, '')
+        return <div key={i} style={{fontFamily:'Oswald,sans-serif',fontSize:16,fontWeight:700,color:C.text,textTransform:'uppercase',letterSpacing:'.5px',marginTop:i>0?18:0,marginBottom:6,borderBottom:`2px solid ${C.gold}`,paddingBottom:4}}>{label}</div>
+      }
+      if (line.startsWith('- ')) {
+        return <div key={i} style={{color:C.text,fontSize:15,lineHeight:1.7,paddingLeft:16,position:'relative'}}><span style={{position:'absolute',left:0,color:C.gold,fontWeight:700}}>{'>'}</span>{line.slice(2)}</div>
+      }
+      if (line.trim() === '') return <div key={i} style={{height:8}} />
+      return <div key={i} style={{color:C.text,fontSize:15,lineHeight:1.7}}>{line}</div>
+    })
+  }
+
+  return (
+    <>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
+        <span style={{fontSize:24}}>&#x1F9E0;</span>
+        <div style={{fontFamily:'Oswald,sans-serif',fontSize:22,color:C.text,fontWeight:700}}>{"Coach Sarah AI"}</div>
+      </div>
+      <div style={{fontFamily:'Oswald,sans-serif',fontSize:16,color:C.gold,fontWeight:600,marginBottom:16}}>{"What's My Next Move?"}</div>
+
+      {prospect && (
+        <div style={{background:'#f5f5f5',borderRadius:10,padding:'10px 14px',marginBottom:16,border:'2px solid #e0e0e0'}}>
+          <span style={{color:C.text,fontWeight:600,fontSize:15}}>{prospect.name}</span>
+          <span style={{color:C.muted,fontSize:14,marginLeft:8}}>{prospect.handle}</span>
+          <span style={{color:ch?.color,fontSize:13,marginLeft:8,fontWeight:600}}>{ch?.key} - {ch?.name}</span>
+        </div>
+      )}
+
+      {!result ? (
+        <>
+          <SL small>Which channel is this person in?</SL>
+          <div style={{display:'flex',gap:5,marginBottom:16}}>
+            {CHANNELS.map(c => (
+              <button key={c.id} onClick={() => setSelChannel(c.id)} style={{flex:1,background:selChannel===c.id?c.color:'#f5f5f5',color:selChannel===c.id?'#fff':C.text,border:`2px solid ${selChannel===c.id?c.color:'#e0e0e0'}`,padding:'8px 0',borderRadius:8,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',cursor:'pointer',transition:'all .12s'}}>{c.key}</button>
+            ))}
+          </div>
+
+          <SL small>Paste your last message exchange here (or describe what happened)</SL>
+          <textarea
+            value={convoText}
+            onChange={e => setConvoText(e.target.value)}
+            placeholder={"Example: I sent her a DM saying 'Hey! Love your fitness page' and she replied 'Thanks! What do you do?' and I said 'I'm a health coach' and she hasn't replied in 2 days..."}
+            style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'12px 14px',borderRadius:10,fontSize:15,resize:'vertical',minHeight:120,lineHeight:1.6,marginBottom:16}}
+          />
+
+          {error && <div style={{background:C.red+'15',border:`1px solid ${C.red}33`,color:C.red,fontSize:14,padding:'10px 14px',borderRadius:10,marginBottom:14}}>{error}</div>}
+
+          <div style={{display:'flex',gap:8}}>
+            <GhostBtn full onClick={onClose}>Cancel</GhostBtn>
+            <GoldBtn
+              full
+              onClick={handleSubmit}
+              style={{
+                background: loading ? C.muted : convoText.trim() ? '#6C3483' : '#ccc',
+                color: loading || !convoText.trim() ? '#aaa' : '#fff',
+                cursor: loading || !convoText.trim() ? 'not-allowed' : 'pointer',
+                boxShadow: convoText.trim() && !loading ? '0 3px 12px rgba(108,52,131,0.3)' : 'none',
+              }}
+            >
+              {loading ? 'Analyzing...' : 'Get My Next Move'}
+            </GoldBtn>
+          </div>
+        </>
+      ) : (
+        <>
+          <div style={{background:'#fafafa',border:'2px solid #e0e0e0',borderRadius:12,padding:18,marginBottom:16,maxHeight:400,overflowY:'auto'}}>
+            {formatResult(result)}
+          </div>
+
+          <div style={{display:'flex',gap:8}}>
+            <GhostBtn full onClick={() => { setResult(null); setConvoText('') }}>Ask Again</GhostBtn>
+            <GoldBtn
+              full
+              onClick={copyResult}
+              style={{background:'#6C3483',color:'#fff',boxShadow:'0 3px 12px rgba(108,52,131,0.3)'}}
+            >
+              {copied ? 'Copied!' : 'Copy Response'}
+            </GoldBtn>
+          </div>
+
+          <button onClick={onClose} style={{width:'100%',marginTop:8,background:'none',border:'none',color:C.muted,fontSize:14,cursor:'pointer',padding:'8px 0'}}>Close</button>
+        </>
+      )}
     </>
   )
 }
