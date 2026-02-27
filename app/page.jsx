@@ -296,28 +296,33 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
 
   const handleFinish = async () => {
     setSaving(true)
-    // Convert arrays to JSON strings for TEXT columns in database
-    const payload = { 
-      ...data, 
-      user_id: profile.id, 
-      wizard_completed: true,
-      lead_magnet_delivery: Array.isArray(data.lead_magnet_delivery) ? JSON.stringify(data.lead_magnet_delivery) : data.lead_magnet_delivery,
-      offer_sales_method: Array.isArray(data.offer_sales_method) ? JSON.stringify(data.offer_sales_method) : data.offer_sales_method,
+    try {
+      // Convert arrays to JSON strings for TEXT columns in database
+      const payload = { 
+        ...data, 
+        user_id: profile.id, 
+        wizard_completed: true,
+        lead_magnet_delivery: Array.isArray(data.lead_magnet_delivery) ? JSON.stringify(data.lead_magnet_delivery) : data.lead_magnet_delivery,
+        offer_sales_method: Array.isArray(data.offer_sales_method) ? JSON.stringify(data.offer_sales_method) : data.offer_sales_method,
+      }
+      
+      let result
+      if (existingData?.id) {
+        result = await sb.from('coach_profiles').update(payload).eq('id', existingData.id).select().single()
+      } else {
+        result = await sb.from('coach_profiles').insert(payload).select().single()
+      }
+      
+      setSaving(false)
+      if (result.error) {
+        alert('Error saving profile: ' + result.error.message)
+        return
+      }
+      onComplete(result.data)
+    } catch (err) {
+      setSaving(false)
+      alert('Error saving profile: ' + (err.message || 'Network error. Please check your connection and try again.'))
     }
-    
-    let result
-    if (existingData?.id) {
-      result = await sb.from('coach_profiles').update(payload).eq('id', existingData.id).select().single()
-    } else {
-      result = await sb.from('coach_profiles').insert(payload).select().single()
-    }
-    
-    setSaving(false)
-    if (result.error) {
-      alert('Error saving profile: ' + result.error.message)
-      return
-    }
-    onComplete(result.data)
   }
 
   // Assembled dream client sentence
