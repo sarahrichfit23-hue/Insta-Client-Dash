@@ -275,11 +275,11 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
     niche_result: existingData?.niche_result || '',
     lead_magnet_name: existingData?.lead_magnet_name || '',
     lead_magnet_description: existingData?.lead_magnet_description || '',
-    lead_magnet_delivery: existingData?.lead_magnet_delivery || [],
+    lead_magnet_delivery: existingData?.lead_magnet_delivery ? (typeof existingData.lead_magnet_delivery === 'string' ? JSON.parse(existingData.lead_magnet_delivery) : existingData.lead_magnet_delivery) : [],
     offer_name: existingData?.offer_name || '',
     offer_description: existingData?.offer_description || '',
     offer_price: existingData?.offer_price || '',
-    offer_sales_method: existingData?.offer_sales_method || [],
+    offer_sales_method: existingData?.offer_sales_method ? (typeof existingData.offer_sales_method === 'string' ? JSON.parse(existingData.offer_sales_method) : existingData.offer_sales_method) : [],
     coach_story: existingData?.coach_story || '',
     coach_result_example: existingData?.coach_result_example || '',
   })
@@ -296,7 +296,14 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
 
   const handleFinish = async () => {
     setSaving(true)
-    const payload = { ...data, user_id: profile.id, wizard_completed: true }
+    // Convert arrays to JSON strings for TEXT columns in database
+    const payload = { 
+      ...data, 
+      user_id: profile.id, 
+      wizard_completed: true,
+      lead_magnet_delivery: Array.isArray(data.lead_magnet_delivery) ? JSON.stringify(data.lead_magnet_delivery) : data.lead_magnet_delivery,
+      offer_sales_method: Array.isArray(data.offer_sales_method) ? JSON.stringify(data.offer_sales_method) : data.offer_sales_method,
+    }
     
     let result
     if (existingData?.id) {
