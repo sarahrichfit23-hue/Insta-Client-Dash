@@ -266,6 +266,9 @@ function LoginScreen({sb}) {
 function OnboardingWizard({sb, profile, existingData, onComplete}) {
   const [step, setStep] = useState(1)
   const [saving, setSaving] = useState(false)
+  const [skipLeadMagnet, setSkipLeadMagnet] = useState(false)
+  const [skipOffer, setSkipOffer] = useState(false)
+  const [skipStory, setSkipStory] = useState(false)
   const [data, setData] = useState({
     niche_who: existingData?.niche_who || '',
     niche_problem: existingData?.niche_problem || '',
@@ -283,11 +286,11 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
 
   const set = (key, val) => setData(d => ({...d, [key]: val}))
 
-  // Step validation
+  // Step validation - skipped sections are always valid
   const step1Valid = data.niche_who.trim() && data.niche_problem.trim() && data.niche_result.trim()
-  const step2Valid = data.lead_magnet_delivery === 'none' || (data.lead_magnet_name.trim() && data.lead_magnet_description.trim() && data.lead_magnet_delivery)
-  const step3Valid = data.offer_name.trim() && data.offer_description.trim() && data.offer_price.trim() && data.offer_sales_method
-  const step4Valid = data.coach_story.trim() && data.coach_result_example.trim()
+  const step2Valid = skipLeadMagnet || data.lead_magnet_delivery === 'none' || (data.lead_magnet_name.trim() && data.lead_magnet_description.trim() && data.lead_magnet_delivery)
+  const step3Valid = skipOffer || (data.offer_name.trim() && data.offer_description.trim() && data.offer_price.trim() && data.offer_sales_method)
+  const step4Valid = skipStory || (data.coach_story.trim() && data.coach_result_example.trim())
 
   const canProceed = (step === 1 && step1Valid) || (step === 2 && step2Valid) || (step === 3 && step3Valid) || (step === 4 && step4Valid)
 
@@ -379,25 +382,36 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
             <div style={{fontFamily:'Oswald,sans-serif',fontSize:28,color:C.white,fontWeight:700,marginBottom:8}}>{"What's your free offer?"}</div>
             <div style={{color:C.muted,fontSize:15,marginBottom:24,lineHeight:1.5}}>Your lead magnet is the first thing prospects get from you. The AI needs to know this so it can reference it at the right moment in conversations.</div>
             
-            <div style={{marginBottom:20}}>
+            {/* Skip toggle */}
+            <label style={{display:'flex',alignItems:'center',gap:10,marginBottom:20,cursor:'pointer',padding:'12px 16px',background:skipLeadMagnet?'#2a2a2a':'transparent',border:`2px solid ${skipLeadMagnet?C.gold:'#3a3a3a'}`,borderRadius:10,transition:'all .15s'}}>
+              <input type="checkbox" checked={skipLeadMagnet} onChange={e=>setSkipLeadMagnet(e.target.checked)} style={{width:18,height:18,accentColor:C.gold}}/>
+              <span style={{color:skipLeadMagnet?C.gold:C.muted,fontSize:14}}>{"I don't have one yet / Not sure"}</span>
+            </label>
+            
+            {skipLeadMagnet && (
+              <div style={{background:'#2a2a2a',borderLeft:`3px solid ${C.gold}`,padding:'12px 16px',borderRadius:'0 8px 8px 0',marginBottom:20}}>
+                <div style={{color:C.muted,fontSize:14,lineHeight:1.6}}>{"No problem — you need one, but we'll work with what you have for now. You can add this in Settings once you've created it. Your AI suggestions will focus on direct conversation in the meantime."}</div>
+              </div>
+            )}
+            
+            <div style={{marginBottom:20,opacity:skipLeadMagnet?0.4:1,pointerEvents:skipLeadMagnet?'none':'auto',transition:'opacity .2s'}}>
               <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>Lead magnet name</label>
               <input value={data.lead_magnet_name} onChange={e=>set('lead_magnet_name',e.target.value)} placeholder="e.g. The 5-Day Clean Eating Kickstart, Free Client Attraction Checklist" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15}}/>
             </div>
 
-            <div style={{marginBottom:20}}>
+            <div style={{marginBottom:20,opacity:skipLeadMagnet?0.4:1,pointerEvents:skipLeadMagnet?'none':'auto',transition:'opacity .2s'}}>
               <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>What does it do for them?</label>
               <textarea value={data.lead_magnet_description} onChange={e=>set('lead_magnet_description',e.target.value.slice(0,200))} placeholder="e.g. Shows new health coaches how to get their first 3 clients without posting every day" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15,resize:'vertical',minHeight:80}}/>
               <div style={{color:C.dim,fontSize:12,textAlign:'right',marginTop:4}}>{data.lead_magnet_description.length}/200</div>
             </div>
 
-            <div style={{marginBottom:20}}>
+            <div style={{marginBottom:20,opacity:skipLeadMagnet?0.4:1,pointerEvents:skipLeadMagnet?'none':'auto',transition:'opacity .2s'}}>
               <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>How do they get it?</label>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
                 {[
                   {id:'dm',label:'DM me for it'},
                   {id:'link_in_bio',label:'Link in bio'},
                   {id:'email_optin',label:'Email opt-in'},
-                  {id:'none',label:"I don't have one yet"},
                 ].map(opt => (
                   <button key={opt.id} onClick={()=>set('lead_magnet_delivery',opt.id)} style={{
                     background: data.lead_magnet_delivery===opt.id ? C.gold+'22' : '#2a2a2a',
@@ -408,12 +422,6 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
                 ))}
               </div>
             </div>
-
-            {data.lead_magnet_delivery === 'none' && (
-              <div style={{background:'#2a2a2a',borderLeft:`3px solid ${C.gold}`,padding:'12px 16px',borderRadius:'0 8px 8px 0',marginBottom:20}}>
-                <div style={{color:C.muted,fontSize:14,lineHeight:1.6}}>No problem — your AI suggestions will focus on direct conversation rather than lead magnet delivery for now. You can update this anytime in Settings.</div>
-              </div>
-            )}
           </div>
         )}
 
@@ -423,24 +431,36 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
             <div style={{fontFamily:'Oswald,sans-serif',fontSize:28,color:C.white,fontWeight:700,marginBottom:8}}>What do you sell?</div>
             <div style={{color:C.muted,fontSize:15,marginBottom:24,lineHeight:1.5}}>This is what the pipeline is ultimately building toward. The AI will never pitch this directly — but knowing it helps craft conversations that naturally lead here.</div>
             
-            <div style={{marginBottom:20}}>
+            {/* Skip toggle */}
+            <label style={{display:'flex',alignItems:'center',gap:10,marginBottom:20,cursor:'pointer',padding:'12px 16px',background:skipOffer?'#2a2a2a':'transparent',border:`2px solid ${skipOffer?C.gold:'#3a3a3a'}`,borderRadius:10,transition:'all .15s'}}>
+              <input type="checkbox" checked={skipOffer} onChange={e=>setSkipOffer(e.target.checked)} style={{width:18,height:18,accentColor:C.gold}}/>
+              <span style={{color:skipOffer?C.gold:C.muted,fontSize:14}}>{"I don't have this yet / Still figuring it out"}</span>
+            </label>
+            
+            {skipOffer && (
+              <div style={{background:'#2a2a2a',borderLeft:`3px solid ${C.gold}`,padding:'12px 16px',borderRadius:'0 8px 8px 0',marginBottom:20}}>
+                <div style={{color:C.muted,fontSize:14,lineHeight:1.6}}>{"Got it. You can still use the pipeline to start conversations and build relationships — just skip any CH5 suggestions until your offer is ready. Add this in Settings when you're set."}</div>
+              </div>
+            )}
+            
+            <div style={{marginBottom:20,opacity:skipOffer?0.4:1,pointerEvents:skipOffer?'none':'auto',transition:'opacity .2s'}}>
               <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>Program or offer name</label>
               <input value={data.offer_name} onChange={e=>set('offer_name',e.target.value)} placeholder="e.g. The 12-Week Body Reset, 1:1 Business Coaching Intensive" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15}}/>
             </div>
 
-            <div style={{marginBottom:20}}>
+            <div style={{marginBottom:20,opacity:skipOffer?0.4:1,pointerEvents:skipOffer?'none':'auto',transition:'opacity .2s'}}>
               <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>What does it deliver?</label>
               <textarea value={data.offer_description} onChange={e=>set('offer_description',e.target.value.slice(0,250))} placeholder="e.g. 12 weeks of 1:1 coaching + weekly calls + custom meal plan — clients lose 15–25lbs and build sustainable habits" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15,resize:'vertical',minHeight:80}}/>
               <div style={{color:C.dim,fontSize:12,textAlign:'right',marginTop:4}}>{data.offer_description.length}/250</div>
             </div>
 
-            <div style={{marginBottom:20}}>
+            <div style={{marginBottom:20,opacity:skipOffer?0.4:1,pointerEvents:skipOffer?'none':'auto',transition:'opacity .2s'}}>
               <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>Investment</label>
               <input value={data.offer_price} onChange={e=>set('offer_price',e.target.value)} placeholder="e.g. $2,500 / $497/month / $997" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15}}/>
               <div style={{color:C.dim,fontSize:13,marginTop:6}}>This helps the AI calibrate conversation depth — a $200 offer needs fewer touches than a $3,000 program.</div>
             </div>
 
-            <div style={{marginBottom:20}}>
+            <div style={{marginBottom:20,opacity:skipOffer?0.4:1,pointerEvents:skipOffer?'none':'auto',transition:'opacity .2s'}}>
               <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>How do you sell it?</label>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
                 {[
@@ -465,23 +485,39 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
         {step === 4 && (
           <div className="fade">
             <div style={{fontFamily:'Oswald,sans-serif',fontSize:28,color:C.white,fontWeight:700,marginBottom:8}}>Why do you do this work?</div>
-            <div style={{color:C.muted,fontSize:15,marginBottom:24,lineHeight:1.5}}>The best openers and positioning messages are rooted in your real story. Give the AI something true to work with.</div>
+            <div style={{color:C.muted,fontSize:15,marginBottom:8,lineHeight:1.5}}>The best openers and positioning messages are rooted in your real story. Give the AI something true to work with.</div>
             
-            <div style={{marginBottom:20}}>
+            {/* Skip link - subtle, reluctant to click */}
+            {!skipStory && (
+              <div style={{marginBottom:20}}>
+                <span onClick={()=>setSkipStory(true)} style={{color:C.dim,fontSize:13,cursor:'pointer',textDecoration:'underline',opacity:0.7}}>Skip for now</span>
+              </div>
+            )}
+            
+            {skipStory && (
+              <div style={{background:'#2a2a2a',borderLeft:`3px solid ${C.gold}`,padding:'12px 16px',borderRadius:'0 8px 8px 0',marginBottom:20}}>
+                <div style={{color:C.muted,fontSize:14,lineHeight:1.6}}>{"Understood — but come back to this. The more the AI knows about your real story, the better your scripts will sound like YOU and not like everyone else."}</div>
+                <span onClick={()=>setSkipStory(false)} style={{color:C.gold,fontSize:13,cursor:'pointer',textDecoration:'underline',marginTop:8,display:'inline-block'}}>Actually, I want to fill this out</span>
+              </div>
+            )}
+            
+            <div style={{marginBottom:20,opacity:skipStory?0.4:1,pointerEvents:skipStory?'none':'auto',transition:'opacity .2s'}}>
               <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>Your quick origin story</label>
               <textarea value={data.coach_story} onChange={e=>set('coach_story',e.target.value.slice(0,400))} placeholder="e.g. I was a personal trainer for 8 years before I figured out how to get clients consistently. Once I cracked it, I knew I had to teach other coaches the same system." style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15,resize:'vertical',minHeight:120}}/>
               <div style={{color:C.dim,fontSize:12,textAlign:'right',marginTop:4}}>{data.coach_story.length}/400</div>
             </div>
 
-            <div style={{marginBottom:24}}>
+            <div style={{marginBottom:24,opacity:skipStory?0.4:1,pointerEvents:skipStory?'none':'auto',transition:'opacity .2s'}}>
               <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>One result you have gotten for a client (real and specific)</label>
               <textarea value={data.coach_result_example} onChange={e=>set('coach_result_example',e.target.value.slice(0,200))} placeholder="e.g. Helped a postpartum mom lose 22lbs in 14 weeks while working full time and raising two kids under 5" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15,resize:'vertical',minHeight:80}}/>
               <div style={{color:C.dim,fontSize:12,textAlign:'right',marginTop:4}}>{data.coach_result_example.length}/200</div>
             </div>
 
-            <div style={{background:'#2a2a2a',borderLeft:`3px solid ${C.gold}`,padding:'14px 16px',borderRadius:'0 8px 8px 0',marginBottom:20}}>
-              <div style={{color:C.muted,fontSize:14,lineHeight:1.6}}>The AI will never fabricate results or put words in your mouth. It uses your story to add authenticity context — not to make claims.</div>
-            </div>
+            {!skipStory && (
+              <div style={{background:'#2a2a2a',borderLeft:`3px solid ${C.gold}`,padding:'14px 16px',borderRadius:'0 8px 8px 0',marginBottom:20}}>
+                <div style={{color:C.muted,fontSize:14,lineHeight:1.6}}>The AI will never fabricate results or put words in your mouth. It uses your story to add authenticity context — not to make claims.</div>
+              </div>
+            )}
           </div>
         )}
 
