@@ -13,6 +13,24 @@ const C = {
   red:'#C0392B', orange:'#D68910', blue:'#2471A3', green:'#1E8449', purple:'#7D3C98',
 }
 
+// ─── CHANNEL TOOLTIPS ──────────────────────────────────────────
+const CHANNEL_TIPS = {
+  1: "Someone just followed you. Message within 24-48hrs. Goal: start a conversation — nothing more.",
+  2: "They replied. Now add value and build trust. Don't pitch yet. Move here from CH1 once they've responded.",
+  3: "People you haven't messaged yet. Send a personalized Curiosity Opener. Goal: get one reply.",
+  4: "Not ready to DM yet. Like, comment, react to their content for 3-5 days. No DM until they know your face.",
+  5: "Hot leads only. Diagnose their situation, position your offer, close. This is where clients are won.",
+}
+
+// ─── EMPTY COLUMN NUDGES ───────────────────────────────────────
+const EMPTY_NUDGES = {
+  1: "No new followers yet — or add someone who just followed you.",
+  2: "No warm conversations yet. Move a CH1 prospect here once they reply.",
+  3: "This is where you start. Add your cold targets here first.",
+  4: "Add people you want to warm up before you DM them.",
+  5: "No hot leads yet. Keep working CH2 — they'll graduate here.",
+}
+
 // ─── CHANNELS ─────────────────────────────────────────────────
 const CHANNELS = [
   {
@@ -398,6 +416,18 @@ function PipelineApp({sb, profile}) {
   const [confirmDel,setConfirmDel]= useState(null)
   const [saving,    setSaving]    = useState(false)
   const [aiFor,     setAiFor]     = useState(null)
+  const [welcomeDismissed, setWelcomeDismissed] = useState(true)
+  const [hoveredTip, setHoveredTip] = useState(null)
+
+  // Check localStorage for welcome banner dismissal
+  useEffect(() => {
+    const dismissed = localStorage.getItem('iceWelcomeDismissed')
+    setWelcomeDismissed(!!dismissed)
+  }, [])
+  const dismissWelcome = () => {
+    localStorage.setItem('iceWelcomeDismissed', 'true')
+    setWelcomeDismissed(true)
+  }
 
   const pop = (msg) => { setToast(msg); setTimeout(()=>setToast(null),2400) }
   const uid = profile.id
@@ -534,22 +564,39 @@ function PipelineApp({sb, profile}) {
       {/* PIPELINE */}
       {view==='pipeline' && (
         <div style={{padding:'18px 18px 48px'}} className="fade">
-          {/* Metrics bar */}
+          {/* Welcome Banner - only shows when pipeline is empty and not dismissed */}
+          {prospects.length===0 && !welcomeDismissed && (
+            <div style={{background:C.card,borderLeft:`4px solid ${C.gold}`,borderRadius:'0 10px 10px 0',padding:'14px 18px',marginBottom:16,display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12}}>
+              <div style={{color:C.white,fontSize:15,lineHeight:1.6}}>
+                <span style={{fontSize:18,marginRight:6}}>👋</span>
+                <strong>Welcome to your Pipeline.</strong> Your first move: add a prospect to CH3 (Cold Activation) or CH1 (New Arrivals). Not sure where someone goes? Check the <span style={{color:C.gold,cursor:'pointer',textDecoration:'underline'}} onClick={()=>setView('guide')}>Guide</span> or click the <span style={{color:C.gold}}>?</span> on any column.
+              </div>
+              <button onClick={dismissWelcome} style={{background:'none',border:'none',color:C.muted,fontSize:18,cursor:'pointer',padding:0,lineHeight:1}}>×</button>
+            </div>
+          )}
+
+          {/* Metrics bar with progress indicators */}
           <div style={{display:'flex',gap:8,marginBottom:18,flexWrap:'wrap'}}>
             {[{k:'dms',l:'DMs',i:'✉',t:60},{k:'replies',l:'Replies',i:'↩',t:20},{k:'emails',l:'Emails',i:'◎',t:5},{k:'offers',l:'Offers',i:'◇',t:5},{k:'sales',l:'Sales',i:'★',t:1}].map(m=>{
               const v=today[m.k]||0,pct=Math.min(100,(v/m.t)*100),hit=v>=m.t
+              // Progress status colors: grey=0%, yellow=1-49%, blue=50-79%, green=80-100%
+              const statusColor = pct===0 ? '#aaa' : pct<50 ? '#D4AC0D' : pct<80 ? C.blue : '#27AE60'
               return (
                 <div key={m.k} style={{flex:'1 1 120px',background:C.card,borderRadius:12,padding:4,boxShadow:C.shadow3d}}>
                   <div style={{background:C.cardInner,borderRadius:9,padding:'12px 14px'}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
-                      <span style={{color:C.muted,fontSize:13,textTransform:'uppercase',letterSpacing:'.3px',fontWeight:600}}>{m.i} {m.l}</span>
+                      <span style={{color:C.muted,fontSize:13,textTransform:'uppercase',letterSpacing:'.3px',fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
+                        {m.i} {m.l}
+                        <span style={{width:8,height:8,borderRadius:'50%',background:statusColor,display:'inline-block'}}/>
+                        {hit && <span style={{color:C.gold,fontSize:14}}>⭐</span>}
+                      </span>
                       <div style={{display:'flex',gap:4}}>
                         <button onClick={()=>bumpMetric(m.k,-1)} style={{background:'#f0f0f0',color:C.text,width:26,height:26,borderRadius:8,fontSize:16,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>−</button>
                         <button onClick={()=>bumpMetric(m.k,1)} style={{background:C.gold,color:C.black,width:26,height:26,borderRadius:8,fontSize:14,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(232,185,49,0.3)'}}>+</button>
                       </div>
                     </div>
                     <div style={{fontFamily:'monospace',fontSize:26,fontWeight:700,color:hit?'#b8941a':C.text,lineHeight:1}}>{v}<span style={{fontSize:13,color:C.muted}}>/{m.t}</span></div>
-                    <div style={{marginTop:8,height:4,background:'#f0f0f0',borderRadius:4}}><div style={{width:`${pct}%`,height:'100%',background:hit?C.gold:C.blue,borderRadius:4,transition:'width .3s'}}/></div>
+                    <div style={{marginTop:8,height:4,background:'#f0f0f0',borderRadius:4}}><div style={{width:`${pct}%`,height:'100%',background:hit?C.gold:statusColor,borderRadius:4,transition:'width .3s'}}/></div>
                   </div>
                 </div>
               )
@@ -580,13 +627,26 @@ function PipelineApp({sb, profile}) {
                 <div key={ch.id} style={{background:C.card,borderRadius:16,overflow:'hidden',boxShadow:C.shadow3d}}>
                   <div style={{background:C.cardInner,margin:4,marginBottom:0,borderRadius:'12px 12px 0 0',padding:'14px 14px',borderBottom:`3px solid ${ch.color}`}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}>
-                      <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <div style={{display:'flex',alignItems:'center',gap:8,position:'relative'}}>
                         <span style={{background:ch.color,color:'#fff',fontSize:14,fontWeight:800,padding:'4px 10px',borderRadius:6,fontFamily:'Oswald,sans-serif'}}>{ch.key}</span>
                         <span style={{color:C.text,fontSize:18,fontWeight:600,fontFamily:'Oswald,sans-serif'}}>{ch.name}</span>
+                        {/* Tooltip trigger */}
+                        <span 
+                          onMouseEnter={()=>setHoveredTip(ch.id)} 
+                          onMouseLeave={()=>setHoveredTip(null)}
+                          onClick={()=>setHoveredTip(hoveredTip===ch.id?null:ch.id)}
+                          style={{width:18,height:18,borderRadius:'50%',background:'#e0e0e0',color:C.muted,fontSize:11,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}>?</span>
+                        {/* Tooltip */}
+                        {hoveredTip===ch.id && (
+                          <div style={{position:'absolute',top:'100%',left:0,marginTop:8,background:C.card,border:`2px solid ${C.gold}`,borderRadius:10,padding:'10px 14px',color:C.white,fontSize:13,lineHeight:1.5,maxWidth:240,zIndex:100,boxShadow:'0 4px 12px rgba(0,0,0,0.3)'}}>
+                            <div style={{position:'absolute',top:-8,left:20,width:0,height:0,borderLeft:'8px solid transparent',borderRight:'8px solid transparent',borderBottom:`8px solid ${C.gold}`}}/>
+                            {CHANNEL_TIPS[ch.id]}
+                          </div>
+                        )}
                       </div>
                       <div style={{display:'flex',alignItems:'center',gap:5}}>
                         <span style={{color:C.text,fontWeight:700,fontSize:24,fontFamily:'monospace'}}>{chCount(ch.id)}</span>
-                        <button onClick={()=>setScriptCh(open?null:ch.id)} style={{background:open?C.gold:'#f0f0f0',color:open?C.black:C.muted,width:28,height:28,borderRadius:8,fontSize:15,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .12s'}}>📋</button>
+                        <button onClick={()=>setScriptCh(open?null:ch.id)} style={{background:open?C.gold:'#f0f0f0',color:open?C.black:C.muted,width:28,height:28,borderRadius:8,fontSize:15,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .12s'}} title="Toggle Script">📋</button>
                       </div>
                     </div>
                     <div style={{color:C.muted,fontSize:15,lineHeight:1.4}}>{ch.tagline}</div>
@@ -601,7 +661,11 @@ function PipelineApp({sb, profile}) {
                   )}
 
                   <div style={{padding:'8px 4px 4px',display:'flex',flexDirection:'column',gap:4}}>
-                    {cards.length===0&&<div style={{color:C.white,fontSize:16,textAlign:'center',padding:'18px 0',opacity:.3}}>Empty</div>}
+                    {cards.length===0&&(
+                      <div style={{color:C.white,fontSize:14,textAlign:'center',padding:'16px 10px',opacity:.5,lineHeight:1.5}}>
+                        {EMPTY_NUDGES[ch.id]}
+                      </div>
+                    )}
                     {cards.map(p=>{
                       const intentCfg=INTENT.find(i=>i.id===p.intent)
                       const pts=pTouches(p.id)
@@ -627,6 +691,15 @@ function PipelineApp({sb, profile}) {
                               {ch.id<5&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id+1)}} style={{background:ch.color+'22',color:ch.color,width:28,height:28,borderRadius:8,fontSize:15,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>→</button>}
                               <button onClick={e=>{e.stopPropagation();setTouchFor(p.id)}} style={{background:C.gold,color:C.black,width:28,height:28,borderRadius:8,fontSize:17,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(232,185,49,0.3)'}}>+</button>
                             </div>
+                          </div>
+                          {/* AI suggestion micro cue */}
+                          <div style={{marginTop:8,paddingTop:6,borderTop:'1px solid #f0f0f0'}}>
+                            <span 
+                              onClick={e=>{e.stopPropagation();setAiFor({id:p.id,channel:ch.id})}} 
+                              style={{color:C.dim,fontSize:12,cursor:'pointer'}}
+                            >
+                              Not sure what to say? → <span style={{color:'#6C3483',textDecoration:'underline'}}>AI Suggestion</span>
+                            </span>
                           </div>
                         </div>
                       )
@@ -1034,11 +1107,42 @@ function MetricsRow({m}) {
 
 function AddForm({onSubmit,onCancel,saving}) {
   const [f,setF]=useState({name:'',handle:'',source:'',notes:'',channel:'3',intent:''})
+  const [helperUsed, setHelperUsed]=useState(null)
   const set=(k,v)=>setF(p=>({...p,[k]:v}))
   const ok=f.name.trim()&&f.handle.trim()
+  
+  const HELPER_OPTIONS = [
+    {label:"They just followed me", channel:'1', confirm:'Great! CH1 is for new followers. Send a welcome message within 24-48 hours.'},
+    {label:"I found them but haven't messaged yet", channel:'3', confirm:'CH3 is your cold outreach channel. Send a personalized Curiosity Opener.'},
+    {label:"We've already been talking", channel:'2', confirm:'CH2 is for warm conversations. Keep adding value and building trust.'},
+  ]
+  
+  const selectHelper = (opt) => {
+    set('channel', opt.channel)
+    setHelperUsed(opt)
+  }
+  
   return (
     <>
       <div style={{fontFamily:'Oswald,sans-serif',fontSize:22,color:C.text,fontWeight:700,marginBottom:16}}>Add Prospect</div>
+      
+      {/* Decision Helper */}
+      <div style={{background:'#f8f8f8',border:'2px solid #e8e8e8',borderRadius:12,padding:'14px 16px',marginBottom:16}}>
+        <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:10}}>Where does this person go?</div>
+        <div style={{display:'flex',flexDirection:'column',gap:6}}>
+          {HELPER_OPTIONS.map((opt,i)=>(
+            <button key={i} onClick={()=>selectHelper(opt)} style={{background:helperUsed?.channel===opt.channel?C.gold+'22':C.white,border:`2px solid ${helperUsed?.channel===opt.channel?C.gold:'#e0e0e0'}`,borderRadius:8,padding:'10px 14px',textAlign:'left',fontSize:14,color:C.text,cursor:'pointer',transition:'all .12s'}}>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        {helperUsed && (
+          <div style={{marginTop:10,color:C.muted,fontSize:13,lineHeight:1.5,paddingLeft:4}}>
+            <span style={{color:C.gold}}>→</span> {helperUsed.confirm}
+          </div>
+        )}
+      </div>
+      
       {[{k:'name',l:'Full Name *',ph:'Jane Smith'},{k:'handle',l:'Handle *',ph:'@janesmith'},{k:'source',l:'Where Found',ph:'hashtag, referral...'}].map(row=>(
         <div key={row.k} style={{marginBottom:12}}>
           <SL small>{row.l}</SL>
@@ -1046,10 +1150,10 @@ function AddForm({onSubmit,onCancel,saving}) {
         </div>
       ))}
       <div style={{marginBottom:12}}>
-        <SL small>Starting Channel</SL>
+        <SL small>Starting Channel {helperUsed && <span style={{color:C.muted,fontWeight:400,textTransform:'none'}}>(or pick manually)</span>}</SL>
         <div style={{display:'flex',gap:5}}>
           {CHANNELS.map(ch=>(
-            <button key={ch.id} onClick={()=>set('channel',String(ch.id))} style={{flex:1,background:f.channel===String(ch.id)?ch.color:'#f5f5f5',color:f.channel===String(ch.id)?'#fff':C.text,border:`2px solid ${f.channel===String(ch.id)?ch.color:'#e0e0e0'}`,padding:'8px 0',borderRadius:8,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',cursor:'pointer',transition:'all .12s'}}>{ch.key}</button>
+            <button key={ch.id} onClick={()=>{set('channel',String(ch.id));setHelperUsed(null)}} style={{flex:1,background:f.channel===String(ch.id)?ch.color:'#f5f5f5',color:f.channel===String(ch.id)?'#fff':C.text,border:`2px solid ${f.channel===String(ch.id)?ch.color:'#e0e0e0'}`,padding:'8px 0',borderRadius:8,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',cursor:'pointer',transition:'all .12s'}}>{ch.key}</button>
           ))}
         </div>
       </div>
