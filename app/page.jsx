@@ -275,7 +275,7 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
     niche_result: existingData?.niche_result || '',
     lead_magnet_name: existingData?.lead_magnet_name || '',
     lead_magnet_description: existingData?.lead_magnet_description || '',
-    lead_magnet_delivery: existingData?.lead_magnet_delivery || '',
+    lead_magnet_delivery: existingData?.lead_magnet_delivery || [],
     offer_name: existingData?.offer_name || '',
     offer_description: existingData?.offer_description || '',
     offer_price: existingData?.offer_price || '',
@@ -288,7 +288,7 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
 
   // Step validation - skipped sections are always valid
   const step1Valid = data.niche_who.trim() && data.niche_problem.trim() && data.niche_result.trim()
-  const step2Valid = skipLeadMagnet || data.lead_magnet_delivery === 'none' || (data.lead_magnet_name.trim() && data.lead_magnet_description.trim() && data.lead_magnet_delivery)
+  const step2Valid = skipLeadMagnet || data.lead_magnet_delivery.includes('not_sure') || (data.lead_magnet_name.trim() && data.lead_magnet_description.trim() && data.lead_magnet_delivery.length > 0)
   const step3Valid = skipOffer || (data.offer_name.trim() && data.offer_description.trim() && data.offer_price.trim() && data.offer_sales_method)
   const step4Valid = skipStory || (data.coach_story.trim() && data.coach_result_example.trim())
 
@@ -406,20 +406,51 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
             </div>
 
             <div style={{marginBottom:20,opacity:skipLeadMagnet?0.4:1,pointerEvents:skipLeadMagnet?'none':'auto',transition:'opacity .2s'}}>
-              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>How do they get it?</label>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>How do they get it? <span style={{fontWeight:400,textTransform:'none',color:C.muted}}>(select all that apply)</span></label>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
                 {[
                   {id:'dm',label:'DM me for it'},
                   {id:'link_in_bio',label:'Link in bio'},
                   {id:'email_optin',label:'Email opt-in'},
-                ].map(opt => (
-                  <button key={opt.id} onClick={()=>set('lead_magnet_delivery',opt.id)} style={{
-                    background: data.lead_magnet_delivery===opt.id ? C.gold+'22' : '#2a2a2a',
-                    border: `2px solid ${data.lead_magnet_delivery===opt.id ? C.gold : '#3a3a3a'}`,
-                    color: data.lead_magnet_delivery===opt.id ? C.gold : C.white,
-                    padding:'12px 14px',borderRadius:10,fontSize:14,cursor:'pointer',transition:'all .15s'
-                  }}>{opt.label}</button>
-                ))}
+                ].map(opt => {
+                  const isSelected = Array.isArray(data.lead_magnet_delivery) && data.lead_magnet_delivery.includes(opt.id)
+                  const isDisabled = Array.isArray(data.lead_magnet_delivery) && data.lead_magnet_delivery.includes('not_sure')
+                  return (
+                    <button key={opt.id} onClick={()=>{
+                      if(isDisabled) return
+                      const current = Array.isArray(data.lead_magnet_delivery) ? data.lead_magnet_delivery : []
+                      if(isSelected) {
+                        set('lead_magnet_delivery', current.filter(x => x !== opt.id))
+                      } else {
+                        set('lead_magnet_delivery', [...current.filter(x => x !== 'not_sure'), opt.id])
+                      }
+                    }} style={{
+                      background: isSelected ? C.gold+'22' : '#2a2a2a',
+                      border: `2px solid ${isSelected ? C.gold : '#3a3a3a'}`,
+                      color: isSelected ? C.gold : C.white,
+                      padding:'12px 14px',borderRadius:10,fontSize:14,cursor:isDisabled?'not-allowed':'pointer',transition:'all .15s',
+                      opacity: isDisabled ? 0.4 : 1
+                    }}>{opt.label}</button>
+                  )
+                })}
+                {/* Not sure yet option */}
+                {(() => {
+                  const isNotSure = Array.isArray(data.lead_magnet_delivery) && data.lead_magnet_delivery.includes('not_sure')
+                  return (
+                    <button onClick={()=>{
+                      if(isNotSure) {
+                        set('lead_magnet_delivery', [])
+                      } else {
+                        set('lead_magnet_delivery', ['not_sure'])
+                      }
+                    }} style={{
+                      background: isNotSure ? C.gold+'22' : '#2a2a2a',
+                      border: `2px solid ${isNotSure ? C.gold : '#3a3a3a'}`,
+                      color: isNotSure ? C.gold : C.white,
+                      padding:'12px 14px',borderRadius:10,fontSize:14,cursor:'pointer',transition:'all .15s'
+                    }}>Not sure yet</button>
+                  )
+                })()}
               </div>
             </div>
           </div>
