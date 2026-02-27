@@ -932,6 +932,17 @@ function PipelineApp({sb, profile, coachProfile}) {
   const [aiFor,     setAiFor]     = useState(null)
   const [welcomeDismissed, setWelcomeDismissed] = useState(true)
   const [hoveredTip, setHoveredTip] = useState(null)
+  
+  // AI Usage tracking state
+  const [aiUsage, setAiUsage] = useState({ callsToday: 0, callsLimit: 50, callsRemaining: 50 })
+  const [aiScripts, setAiScripts] = useState([])
+  const [aiWarningToast, setAiWarningToast] = useState(false)
+  const [aiLimitModal, setAiLimitModal] = useState(false)
+  const [aiScriptsModal, setAiScriptsModal] = useState(false)
+  const [aiInfoPopover, setAiInfoPopover] = useState(false)
+  
+  const uid = profile.id
+  const pop = (msg) => { setToast(msg); setTimeout(()=>setToast(null),2400) }
 
   // Check localStorage for welcome banner dismissal
   useEffect(() => {
@@ -942,9 +953,45 @@ function PipelineApp({sb, profile, coachProfile}) {
     localStorage.setItem('iceWelcomeDismissed', 'true')
     setWelcomeDismissed(true)
   }
-
-  const pop = (msg) => { setToast(msg); setTimeout(()=>setToast(null),2400) }
-  const uid = profile.id
+  
+  // Fetch AI usage stats
+  const fetchAiUsage = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/ai-usage?userId=${uid}`)
+      const data = await res.json()
+      if (res.ok) {
+        setAiUsage({
+          callsToday: data.callsToday || 0,
+          callsLimit: data.callsLimit || 50,
+          callsRemaining: data.callsRemaining ?? 50
+        })
+        setAiScripts(data.scripts || [])
+      }
+    } catch (err) {
+      console.error('[v0] Failed to fetch AI usage:', err)
+    }
+  }, [uid])
+  
+  useEffect(() => {
+    fetchAiUsage()
+  }, [fetchAiUsage])
+  
+  // Handle AI usage update from API response
+  const handleAiUsageUpdate = (usageData) => {
+    if (!usageData) return
+    setAiUsage({
+      callsToday: usageData.callsToday || 0,
+      callsLimit: usageData.callsLimit || 50,
+      callsRemaining: Math.max(0, (usageData.callsLimit || 50) - (usageData.callsToday || 0))
+    })
+    // Show 75% warning toast if flagged
+    if (usageData.showWarning) {
+      setAiWarningToast(true)
+      setTimeout(() => setAiWarningToast(false), 6000)
+    }
+    // Refresh scripts list
+    fetchAiUsage()
+  }
 
   const loadAll = useCallback(async () => {
     setLoading(true)
@@ -1043,6 +1090,110 @@ function PipelineApp({sb, profile, coachProfile}) {
     <div style={{minHeight:'100vh',background:C.gold}}>
       <GlobalStyles/>
       {toast && <Toast msg={toast}/>}
+      
+      {/* AI 75% Warning Toast */}
+      {aiWarningToast && (
+        <div style={{position:'fixed',bottom:20,right:20,background:'#2a2a2a',borderLeft:`4px solid ${C.gold}`,borderRadius:'0 10px 10px 0',padding:'16px 20px',maxWidth:360,zIndex:600,boxShadow:'0 8px 32px rgba(0,0,0,0.3)',animation:'slideIn .3s ease'}}>
+          <button onClick={()=>setAiWarningToast(false)} style={{position:'absolute',top:8,right:10,background:'none',border:'none',color:C.muted,fontSize:18,cursor:'pointer'}}>×</button>
+          <div style={{display:'flex',alignItems:'flex-start',gap:12}}>
+            <span style={{color:C.gold,fontSize:20}}>⚡</span>
+            <div>
+              <div style={{color:C.white,fontSize:14,fontWeight:600,marginBottom:6}}>{"Heads up — you've used 75% of today's AI suggestions."}</div>
+              <div style={{color:C.muted,fontSize:13,lineHeight:1.5}}>{"That's totally fine. Just a reminder that the real work happens in the DMs, not in here. Your scripts are ready — go send them."}</div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* AI Limit Reached Modal */}
+      {aiLimitModal && (
+        <Overlay onClose={()=>setAiLimitModal(false)}>
+          <div style={{textAlign:'center'}}>
+            <div style={{fontFamily:'Oswald,sans-serif',fontSize:22,color:C.text,fontWeight:700,marginBottom:14}}>{"You've maxed out today's AI suggestions. Honestly? Good."}</div>
+            <div style={{color:C.muted,fontSize:15,lineHeight:1.7,marginBottom:8,textAlign:'left'}}>
+              {"50 AI-assisted ideas in one day means you've been putting in the work — and that's the whole point."}
+            </div>
+            <div style={{color:C.muted,fontSize:15,lineHeight:1.7,marginBottom:8,textAlign:'left'}}>
+              {"Here's the thing: the coaches who get clients fastest aren't the ones who craft the perfect message. They're the ones who send more messages. Your scripts from today are already good enough."}
+            </div>
+            <div style={{color:C.text,fontSize:16,fontWeight:600,marginBottom:20,textAlign:'left'}}>Go send them.</div>
+            <div style={{color:C.muted,fontSize:14,marginBottom:20,textAlign:'left'}}>{"Your AI suggestions reset tomorrow at midnight. The pipeline doesn't wait."}</div>
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              <GoldBtn full onClick={()=>{setAiLimitModal(false);setView('pipeline')}} style={{background:C.gold,color:C.black}}>{"Go Work My Pipeline →"}</GoldBtn>
+              <button onClick={()=>{setAiLimitModal(false);setAiScriptsModal(true)}} style={{background:'none',border:'none',color:C.muted,fontSize:13,cursor:'pointer',textDecoration:'underline'}}>{"View today's generated scripts"}</button>
+            </div>
+          </div>
+        </Overlay>
+      )}
+      
+      {/* Today's AI Scripts Modal */}
+      {aiScriptsModal && (
+        <Overlay onClose={()=>setAiScriptsModal(false)}>
+          <div style={{maxHeight:'70vh',overflowY:'auto'}}>
+            <div style={{fontFamily:'Oswald,sans-serif',fontSize:20,color:C.text,fontWeight:700,marginBottom:14}}>{"Today's AI Scripts"}</div>
+            {aiScripts.length === 0 ? (
+              <div style={{color:C.muted,fontSize:14,textAlign:'center',padding:'20px 0'}}>No scripts generated today yet.</div>
+            ) : (
+              <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                {aiScripts.map((script, idx) => {
+                  const ch = CHANNELS.find(c => c.id === script.channel)
+                  return (
+                    <div key={script.id || idx} style={{background:'#f5f5f5',borderRadius:10,padding:14,border:'1px solid #e0e0e0'}}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+                        <div style={{display:'flex',alignItems:'center',gap:8}}>
+                          {script.prospect_name && <span style={{color:C.text,fontSize:14,fontWeight:600}}>{script.prospect_name}</span>}
+                          {script.prospect_handle && <span style={{color:C.muted,fontSize:13}}>{script.prospect_handle}</span>}
+                          {ch && <span style={{background:ch.color+'22',color:ch.color,fontSize:11,fontWeight:700,padding:'2px 6px',borderRadius:4}}>{ch.key}</span>}
+                        </div>
+                        <span style={{color:C.dim,fontSize:11}}>{new Date(script.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
+                      </div>
+                      <div style={{color:C.text,fontSize:13,lineHeight:1.6,whiteSpace:'pre-wrap',maxHeight:150,overflowY:'auto'}}>{script.generated_output}</div>
+                      <button onClick={()=>{navigator.clipboard.writeText(script.generated_output);pop('Copied!')}} style={{marginTop:10,background:C.black,color:C.white,border:'none',padding:'6px 12px',borderRadius:6,fontSize:12,fontWeight:600,cursor:'pointer'}}>Copy</button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            <div style={{marginTop:16}}>
+              <GhostBtn full onClick={()=>setAiScriptsModal(false)}>Close</GhostBtn>
+            </div>
+          </div>
+        </Overlay>
+      )}
+      
+      {/* AI Info Popover */}
+      {aiInfoPopover && (
+        <div onClick={()=>setAiInfoPopover(false)} style={{position:'fixed',inset:0,zIndex:550}}>
+          <div onClick={e=>e.stopPropagation()} style={{position:'fixed',top:70,right:180,background:'#2a2a2a',borderRadius:12,padding:20,maxWidth:340,boxShadow:'0 12px 40px rgba(0,0,0,0.4)',zIndex:551}}>
+            <div style={{fontFamily:'Oswald,sans-serif',fontSize:16,color:C.white,fontWeight:700,marginBottom:14}}>Your 50 daily AI calls — what counts and what doesn{"'"}t</div>
+            
+            <div style={{borderBottom:`1px solid ${C.gold}33`,paddingBottom:12,marginBottom:12}}>
+              <div style={{color:C.gold,fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.3px',marginBottom:8}}>Uses an AI call (counts toward your 50)</div>
+              <div style={{color:C.muted,fontSize:13,lineHeight:1.7}}>
+                <div>✦ Generate First Touch Script (when adding a prospect)</div>
+                <div>✦ Coach Sarah AI Suggestion (on any prospect card)</div>
+              </div>
+            </div>
+            
+            <div style={{marginBottom:14}}>
+              <div style={{color:'#27AE60',fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.3px',marginBottom:8}}>Never uses AI calls (always free)</div>
+              <div style={{color:C.muted,fontSize:13,lineHeight:1.7}}>
+                <div>✓ Viewing channel scripts and the Script Library</div>
+                <div>✓ The Guide page</div>
+                <div>✓ Daily Workflow and Power Hour tracker</div>
+                <div>✓ Moving prospects between channels</div>
+                <div>✓ Tracking your daily numbers</div>
+                <div>✓ The "Where does this person go?" channel helper</div>
+                <div>✓ Everything else in the dashboard</div>
+              </div>
+            </div>
+            
+            <div style={{color:C.dim,fontSize:11,lineHeight:1.5,borderTop:`1px solid #3a3a3a`,paddingTop:10}}>
+              {"AI calls reset every day at midnight. The core pipeline system never requires AI — it's here to help when you're stuck, not to replace your judgment."}
+            </div>
+          </div>
+        </div>
+      )}
 
       {confirmDel && (
         <Overlay onClose={()=>setConfirmDel(null)}>
@@ -1065,6 +1216,24 @@ function PipelineApp({sb, profile, coachProfile}) {
           <span style={{fontFamily:'Oswald,sans-serif',color:C.gold,fontSize:22,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          {/* AI Usage Counter - subtle, left of nav buttons */}
+          <div style={{display:'flex',alignItems:'center',gap:6,marginRight:8,position:'relative'}}>
+            <span style={{
+              color: aiUsage.callsRemaining === 0 ? '#C0392B88' : aiUsage.callsRemaining <= 12 ? C.gold : C.muted,
+              fontSize:14
+            }}>⚡</span>
+            <span style={{
+              color: aiUsage.callsRemaining === 0 ? '#C0392B88' : aiUsage.callsRemaining <= 12 ? C.gold : C.muted,
+              fontSize:12
+            }}>
+              {aiUsage.callsRemaining === 0 ? 'AI calls used for today' : `${aiUsage.callsRemaining} AI calls left today`}
+            </span>
+            {aiUsage.callsToday > 0 && (
+              <button onClick={()=>setAiScriptsModal(true)} title="View today's scripts" style={{background:'none',border:'none',color:C.muted,fontSize:12,cursor:'pointer',padding:'2px 4px'}}>📋</button>
+            )}
+            <button onClick={()=>setAiInfoPopover(!aiInfoPopover)} title="What uses AI calls?" style={{background:'none',border:'none',color:C.dim,fontSize:11,cursor:'pointer',padding:'2px 4px',textDecoration:'underline'}}>?</button>
+          </div>
+          
           {['pipeline','daily','guide','settings'].map(v=>(
               <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.gold:'rgba(255,255,255,0.1)',color:view===v?C.black:C.white,padding:'10px 18px',borderRadius:10,fontSize:15,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:view===v?'none':'1px solid rgba(255,255,255,0.2)',cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s',boxShadow:view===v?'0 2px 8px rgba(246,189,96,0.4)':'none'}}>
                 {v}
@@ -1200,19 +1369,20 @@ function PipelineApp({sb, profile, coachProfile}) {
                           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                             <span style={{color:C.muted,fontSize:14}}>{pts.length} touches</span>
                             <div style={{display:'flex',gap:4}}>
-                              <button onClick={e=>{e.stopPropagation();setAiFor({id:p.id,channel:ch.id})}} title="Coach Sarah AI" style={{background:'#6C3483',color:'#fff',width:28,height:28,borderRadius:8,fontSize:15,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(108,52,131,0.3)'}}>&#x1F9E0;</button>
                               {ch.id>1&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id-1)}} style={{background:'#f0f0f0',color:C.text,width:28,height:28,borderRadius:8,fontSize:15,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>←</button>}
                               {ch.id<5&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id+1)}} style={{background:ch.color+'22',color:ch.color,width:28,height:28,borderRadius:8,fontSize:15,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>→</button>}
                               <button onClick={e=>{e.stopPropagation();setTouchFor(p.id)}} style={{background:C.gold,color:C.black,width:28,height:28,borderRadius:8,fontSize:17,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(232,185,49,0.3)'}}>+</button>
                             </div>
                           </div>
-                          {/* AI suggestion micro cue */}
+                          {/* AI suggestion text link - demoted, only appears after touch info */}
                           <div style={{marginTop:8,paddingTop:6,borderTop:'1px solid #f0f0f0'}}>
                             <span 
                               onClick={e=>{e.stopPropagation();setAiFor({id:p.id,channel:ch.id})}} 
-                              style={{color:C.dim,fontSize:12,cursor:'pointer'}}
+                              style={{color:C.dim,fontSize:12,cursor:'pointer',transition:'color .15s'}}
+                              onMouseEnter={e=>e.currentTarget.style.color=C.gold}
+                              onMouseLeave={e=>e.currentTarget.style.color=C.dim}
                             >
-                              Not sure what to say? → <span style={{color:'#6C3483',textDecoration:'underline'}}>AI Suggestion</span>
+                              {"Need a next move? → Ask Coach Sarah AI"}
                             </span>
                           </div>
                         </div>
@@ -1489,8 +1659,15 @@ OBJECTION HANDLING: Stay curious. Ask questions. Don't push — pull.`}
                 <div style={{fontFamily:'Oswald,sans-serif',fontSize:26,color:C.black,fontWeight:700}}>{p.name}</div>
                 <div style={{color:C.dark,fontSize:15,opacity:0.7}}>{p.handle}{p.source?` · via ${p.source}`:''}</div>
               </div>
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>setAiFor({id:p.id,channel:p.channel})} style={{background:'#6C3483',color:'#fff',padding:'10px 18px',borderRadius:10,fontSize:14,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',boxShadow:'0 2px 8px rgba(108,52,131,0.2)',display:'flex',alignItems:'center',gap:6}}>&#x1F9E0; AI</button>
+              <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                <span 
+                  onClick={()=>setAiFor({id:p.id,channel:p.channel})} 
+                  style={{color:C.dim,fontSize:13,cursor:'pointer',transition:'color .15s',marginRight:8}}
+                  onMouseEnter={e=>e.currentTarget.style.color=C.gold}
+                  onMouseLeave={e=>e.currentTarget.style.color=C.dim}
+                >
+                  {"Need a next move? → Ask Coach Sarah AI"}
+                </span>
                 <button onClick={()=>setTouchFor(p.id)} style={{background:C.black,color:C.white,padding:'10px 18px',borderRadius:10,fontSize:14,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,0.2)'}}>+ Touch</button>
                 <button onClick={()=>setConfirmDel(p.id)} style={{background:C.red+'22',color:C.red,padding:'8px 12px',borderRadius:8,fontSize:13,border:'none',cursor:'pointer'}}>✕</button>
               </div>
@@ -1558,9 +1735,9 @@ OBJECTION HANDLING: Stay curious. Ask questions. Don't push — pull.`}
         )
       })()}
 
-      {addOpen&&<Overlay onClose={()=>setAddOpen(false)}><AddForm onSubmit={addProspect} onCancel={()=>setAddOpen(false)} saving={saving} userId={uid}/></Overlay>}
+      {addOpen&&<Overlay onClose={()=>setAddOpen(false)}><AddForm onSubmit={addProspect} onCancel={()=>setAddOpen(false)} saving={saving} userId={uid} onUsageUpdate={handleAiUsageUpdate} onLimitReached={()=>setAiLimitModal(true)} aiUsage={aiUsage}/></Overlay>}
       {touchFor&&<Overlay onClose={()=>setTouchFor(null)}><TouchForm prospect={prospects.find(p=>p.id===touchFor)} onSubmit={(type,note)=>logTouch(touchFor,type,note)} onCancel={()=>setTouchFor(null)}/></Overlay>}
-      {aiFor&&<Overlay onClose={()=>setAiFor(null)}><AISuggestionForm prospect={prospects.find(p=>p.id===aiFor.id)} channel={aiFor.channel} onClose={()=>setAiFor(null)} userId={uid}/></Overlay>}
+      {aiFor&&<Overlay onClose={()=>setAiFor(null)}><AISuggestionForm prospect={prospects.find(p=>p.id===aiFor.id)} channel={aiFor.channel} onClose={()=>setAiFor(null)} userId={uid} onUsageUpdate={handleAiUsageUpdate} onLimitReached={()=>{setAiFor(null);setAiLimitModal(true)}} aiUsage={aiUsage}/></Overlay>}
     </div>
   )
 }
@@ -1578,6 +1755,7 @@ function GlobalStyles() {
     input,textarea{font-family:'Inter',sans-serif;outline:none}
     .fade{animation:fade .2s ease}
     @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
   `}</style>
 }
 
@@ -1624,7 +1802,7 @@ function MetricsRow({m}) {
   )
 }
 
-function AddForm({onSubmit,onCancel,saving,userId}) {
+function AddForm({onSubmit,onCancel,saving,userId,onUsageUpdate,onLimitReached,aiUsage}) {
   const [f,setF]=useState({name:'',handle:'',source:'',notes:'',channel:'3',intent:'cold'})
   const [sourceSelection, setSourceSelection]=useState(null)
   const [scriptLoading, setScriptLoading]=useState(false)
@@ -1685,10 +1863,15 @@ function AddForm({onSubmit,onCancel,saving,userId}) {
     if(opt.channels.length>0) set('channel', opt.channels[0])
   }
   
-  const canGenerateScript = sourceSelection && f.channel
+  const canGenerateScript = sourceSelection && f.channel && (!aiUsage || aiUsage.callsRemaining > 0)
   
   const generateScript = async () => {
     if(!canGenerateScript) return
+    // Check if limit reached before attempting
+    if(aiUsage && aiUsage.callsRemaining <= 0) {
+      onLimitReached?.()
+      return
+    }
     setScriptLoading(true)
     setScriptError(null)
     setGeneratedScript(null)
@@ -1701,12 +1884,23 @@ function AddForm({onSubmit,onCancel,saving,userId}) {
           channel: f.channel,
           intent: f.intent || 'cold',
           notes: f.notes || '',
-          userId: userId
+          userId: userId,
+          prospectName: f.name || null,
+          prospectHandle: f.handle || null
         })
       })
       const data = await res.json()
+      // Handle limit reached from server
+      if(data.error === 'limit_reached') {
+        onLimitReached?.()
+        return
+      }
       if(!res.ok) throw new Error(data.error)
       setGeneratedScript(data.script)
+      // Update usage stats
+      if(data.usage) {
+        onUsageUpdate?.(data.usage)
+      }
     } catch(err) {
       setScriptError("Couldn't generate right now — add your notes and try again.")
     } finally {
@@ -1818,22 +2012,26 @@ function AddForm({onSubmit,onCancel,saving,userId}) {
         <textarea value={f.notes} onChange={e=>set('notes',e.target.value)} placeholder={NOTES_PLACEHOLDERS[f.channel]||NOTES_PLACEHOLDERS['3']} style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'10px 13px',borderRadius:10,fontSize:14,resize:'vertical',minHeight:80,lineHeight:1.5}}/>
       </div>
       
-      {/* Generate Script Button */}
+      {/* Generate Script Button - SECONDARY style, visually subordinate */}
       <div style={{marginBottom:16}}>
+        {/* Skip hint text */}
+        <div style={{color:C.dim,fontSize:12,fontStyle:'italic',marginBottom:8,lineHeight:1.5}}>
+          {"Already know what to say? Skip this — the AI is here when you're genuinely stuck, not as a replacement for your own instincts."}
+        </div>
         <button 
           onClick={generateScript} 
           disabled={!canGenerateScript||scriptLoading}
           style={{
             width:'100%',
-            background:canGenerateScript&&!scriptLoading?'#6C3483':'#ddd',
-            color:canGenerateScript&&!scriptLoading?'#fff':'#aaa',
-            padding:'12px 16px',borderRadius:10,fontSize:14,fontWeight:700,fontFamily:'Oswald,sans-serif',
-            border:'none',cursor:canGenerateScript&&!scriptLoading?'pointer':'not-allowed',
-            boxShadow:canGenerateScript&&!scriptLoading?'0 3px 12px rgba(108,52,131,0.25)':'none',
+            background:'transparent',
+            color:canGenerateScript&&!scriptLoading?'#6C3483':'#aaa',
+            padding:'10px 14px',borderRadius:10,fontSize:13,fontWeight:600,fontFamily:'Oswald,sans-serif',
+            border:`2px solid ${canGenerateScript&&!scriptLoading?'#6C3483':'#ddd'}`,
+            cursor:canGenerateScript&&!scriptLoading?'pointer':'not-allowed',
             transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:8
           }}
         >
-          <span style={{fontSize:16}}>✨</span>
+          <span style={{fontSize:14}}>✨</span>
           {scriptLoading?'Sarah\'s brain is working...':'Generate First Touch Script'}
         </button>
         
@@ -1893,7 +2091,7 @@ function TouchForm({prospect,onSubmit,onCancel}) {
   )
 }
 
-function AISuggestionForm({prospect, channel, onClose, userId}) {
+function AISuggestionForm({prospect, channel, onClose, userId, onUsageUpdate, onLimitReached, aiUsage}) {
   const [convoText, setConvoText] = useState('')
   const [selChannel, setSelChannel] = useState(channel || 1)
   const [loading, setLoading] = useState(false)
@@ -1905,6 +2103,11 @@ function AISuggestionForm({prospect, channel, onClose, userId}) {
 
   const handleSubmit = async () => {
     if (!convoText.trim()) return
+    // Check if limit reached before attempting
+    if(aiUsage && aiUsage.callsRemaining <= 0) {
+      onLimitReached?.()
+      return
+    }
     setLoading(true)
     setError(null)
     setResult(null)
@@ -1912,11 +2115,26 @@ function AISuggestionForm({prospect, channel, onClose, userId}) {
       const res = await fetch('/api/ai-suggestion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationText: convoText.trim(), channel: selChannel, userId: userId }),
+        body: JSON.stringify({ 
+          conversationText: convoText.trim(), 
+          channel: selChannel, 
+          userId: userId,
+          prospectName: prospect?.name || null,
+          prospectHandle: prospect?.handle || null
+        }),
       })
       const data = await res.json()
+      // Handle limit reached from server
+      if(data.error === 'limit_reached') {
+        onLimitReached?.()
+        return
+      }
       if (!res.ok) throw new Error(data.error || 'Request failed')
       setResult(data.suggestion)
+      // Update usage stats
+      if(data.usage) {
+        onUsageUpdate?.(data.usage)
+      }
     } catch (err) {
       setError("Sarah's brain is thinking -- try again in a moment.")
     } finally {

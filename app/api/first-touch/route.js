@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCoachProfile, buildCoachProfilePrompt } from '@/lib/coach-profile'
+import { checkAIUsage, incrementAIUsage, logAIScript } from '@/lib/ai-usage'
 
 const BASE_SYSTEM_PROMPT = `You are Coach Sarah AI, trained in the Insta Client Engine 5-Channel Pipeline System. A health coach or personal trainer is about to send their first message to a new prospect. Generate their first-touch message based on the information provided.
 
@@ -51,12 +52,25 @@ export async function POST(request) {
   }
 
   try {
-    const { whereFound, channel, intent, notes, userId } = await request.json()
+    const { whereFound, channel, intent, notes, userId, prospectName, prospectHandle } = await request.json()
 
     if (!whereFound || !channel) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
+      )
+    }
+
+    // Check AI usage limits
+    const usageCheck = await checkAIUsage(userId)
+    if (!usageCheck.canCall) {
+      return NextResponse.json(
+        { 
+          error: 'limit_reached',
+          callsToday: usageCheck.callsToday,
+          callsLimit: usageCheck.callsLimit
+        },
+        { status: 429 }
       )
     }
 
@@ -99,7 +113,24 @@ Notes: ${notes || '(none provided)'}`
     const data = await response.json()
     const aiText = data.content?.[0]?.text || 'No response generated.'
 
-    return NextResponse.json({ script: aiText })
+    // Increment usage and log the script
+    const usageResult = await incrementAIUsage(userId)
+    await logAIScript(userId, {
+      prospectName: prospectName || null,
+      prospectHandle: prospectHandle || null,
+      channel: parseInt(channel) || null,
+      generationType: 'first_touch',
+      generatedOutput: aiText
+    })
+
+    return NextResponse.json({ 
+      script: aiText,
+      usage: {
+        callsToday: usageResult.newCount,
+        callsLimit: usageResult.limit,
+        showWarning: usageResult.showWarning
+      }
+    })
   } catch (err) {
     console.error('[v0] First touch script error:', err)
     return NextResponse.json(

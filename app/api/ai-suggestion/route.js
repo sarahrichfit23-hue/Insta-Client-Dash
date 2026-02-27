@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCoachProfile, buildCoachProfilePrompt } from '@/lib/coach-profile'
+import { checkAIUsage, incrementAIUsage, logAIScript } from '@/lib/ai-usage'
 
 const BASE_SYSTEM_PROMPT = `You are Coach Sarah AI — the strategic brain inside the Insta Client Engine, a proprietary 5-Channel Pipeline System built by Sarah Richardson for health coaches and personal trainers.
 
@@ -102,12 +103,25 @@ export async function POST(request) {
   }
 
   try {
-    const { conversationText, channel, userId } = await request.json()
+    const { conversationText, channel, userId, prospectName, prospectHandle } = await request.json()
 
     if (!conversationText || !channel) {
       return NextResponse.json(
         { error: 'Missing required fields: conversationText and channel' },
         { status: 400 }
+      )
+    }
+
+    // Check AI usage limits
+    const usageCheck = await checkAIUsage(userId)
+    if (!usageCheck.canCall) {
+      return NextResponse.json(
+        { 
+          error: 'limit_reached',
+          callsToday: usageCheck.callsToday,
+          callsLimit: usageCheck.callsLimit
+        },
+        { status: 429 }
       )
     }
 
@@ -152,7 +166,24 @@ ${conversationText}`
     const data = await response.json()
     const aiText = data.content?.[0]?.text || 'No response generated.'
 
-    return NextResponse.json({ suggestion: aiText })
+    // Increment usage and log the script
+    const usageResult = await incrementAIUsage(userId)
+    await logAIScript(userId, {
+      prospectName: prospectName || null,
+      prospectHandle: prospectHandle || null,
+      channel: channel,
+      generationType: 'ai_suggestion',
+      generatedOutput: aiText
+    })
+
+    return NextResponse.json({ 
+      suggestion: aiText,
+      usage: {
+        callsToday: usageResult.newCount,
+        callsLimit: usageResult.limit,
+        showWarning: usageResult.showWarning
+      }
+    })
   } catch (err) {
     console.error('[v0] AI suggestion error:', err)
     return NextResponse.json(
