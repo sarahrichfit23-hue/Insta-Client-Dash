@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
+import { getCoachProfile, buildCoachProfilePrompt } from '@/lib/coach-profile'
 
-const SYSTEM_PROMPT = `You are Coach Sarah AI — the strategic brain inside the Insta Client Engine, a proprietary 5-Channel Pipeline System built by Sarah Richardson for health coaches and personal trainers.
+const BASE_SYSTEM_PROMPT = `You are Coach Sarah AI — the strategic brain inside the Insta Client Engine, a proprietary 5-Channel Pipeline System built by Sarah Richardson for health coaches and personal trainers.
 
 CRITICAL IDENTITY: You are NOT a generic Instagram DM coach. You are trained in Sarah's specific methodology. The system you support is built on behavioral intelligence gathering, not cold pitching. Coaches using this system are intelligence operatives — they observe, they listen, they ask smart questions, and they let prospects sell themselves. The coach never chases. The coach curates.
 
@@ -77,6 +78,12 @@ THINKING RULES:
 - One question per message. Always. This is non-negotiable in Sarah's system.
 - Short messages win. If the suggested message is more than 3 sentences, cut it.`
 
+// Build full system prompt with coach profile
+function buildSystemPrompt(coachProfile) {
+  const profileContext = buildCoachProfilePrompt(coachProfile)
+  return profileContext + BASE_SYSTEM_PROMPT
+}
+
 const CHANNEL_CONTEXT = {
   1: 'CH1 — New Arrivals: First contact, goal is to open a conversation within 48hrs. 10-20 touches/day.',
   2: 'CH2 — Warm Conversations: Active replies happening, goal is to add value and build trust before opening the sales window. 20-30 touches/day.',
@@ -95,7 +102,7 @@ export async function POST(request) {
   }
 
   try {
-    const { conversationText, channel } = await request.json()
+    const { conversationText, channel, userId } = await request.json()
 
     if (!conversationText || !channel) {
       return NextResponse.json(
@@ -103,6 +110,10 @@ export async function POST(request) {
         { status: 400 }
       )
     }
+
+    // Fetch coach profile for personalization
+    const coachProfile = userId ? await getCoachProfile(userId) : null
+    const systemPrompt = buildSystemPrompt(coachProfile)
 
     const channelInfo = CHANNEL_CONTEXT[channel] || `CH${channel}`
 
@@ -122,7 +133,7 @@ ${conversationText}`
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 1024,
-        system: SYSTEM_PROMPT,
+        system: systemPrompt,
         messages: [
           { role: 'user', content: userMessage },
         ],

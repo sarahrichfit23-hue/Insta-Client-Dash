@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
+import { getCoachProfile, buildCoachProfilePrompt } from '@/lib/coach-profile'
 
-const SYSTEM_PROMPT = `You are Coach Sarah AI, trained in the Insta Client Engine 5-Channel Pipeline System. A health coach or personal trainer is about to send their first message to a new prospect. Generate their first-touch message based on the information provided.
+const BASE_SYSTEM_PROMPT = `You are Coach Sarah AI, trained in the Insta Client Engine 5-Channel Pipeline System. A health coach or personal trainer is about to send their first message to a new prospect. Generate their first-touch message based on the information provided.
 
 RULES:
 - CH1 (New Arrivals): Write a welcome DM. Warm, genuine, ONE specific observation reference, ONE open curiosity question. Max 3 sentences.
@@ -20,6 +21,11 @@ FORMAT YOUR RESPONSE AS:
 
 **Why this works:**
 [One sentence explaining the psychology behind this approach]`
+
+function buildSystemPrompt(coachProfile) {
+  const profileContext = buildCoachProfilePrompt(coachProfile)
+  return profileContext + BASE_SYSTEM_PROMPT
+}
 
 const CHANNEL_NAMES = {
   '1': 'CH1 — New Arrivals',
@@ -45,7 +51,7 @@ export async function POST(request) {
   }
 
   try {
-    const { whereFound, channel, intent, notes } = await request.json()
+    const { whereFound, channel, intent, notes, userId } = await request.json()
 
     if (!whereFound || !channel) {
       return NextResponse.json(
@@ -53,6 +59,10 @@ export async function POST(request) {
         { status: 400 }
       )
     }
+
+    // Fetch coach profile for personalization
+    const coachProfile = userId ? await getCoachProfile(userId) : null
+    const systemPrompt = buildSystemPrompt(coachProfile)
 
     const channelName = CHANNEL_NAMES[channel] || `CH${channel}`
     const intentLabel = INTENT_LABELS[intent] || 'Unknown'
@@ -72,7 +82,7 @@ Notes: ${notes || '(none provided)'}`
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 512,
-        system: SYSTEM_PROMPT,
+        system: systemPrompt,
         messages: [
           { role: 'user', content: userMessage },
         ],

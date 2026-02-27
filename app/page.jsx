@@ -180,17 +180,39 @@ export default function App() {
     }
   }, [sb])
 
+  const [coachProfile, setCoachProfile] = useState(undefined)
+
   useEffect(() => {
     if (!session) return
     sb.from('profiles').select('*').eq('id', session.user.id).single()
       .then(({data}) => setProfile(data))
   }, [session, sb])
 
+  // Load coach profile for wizard check (only for non-admin users)
+  useEffect(() => {
+    if (!profile || profile.is_admin) return
+    sb.from('coach_profiles').select('*').eq('user_id', profile.id).single()
+      .then(({data, error}) => {
+        if (error && error.code === 'PGRST116') {
+          // No profile exists yet - they need to complete wizard
+          setCoachProfile(null)
+        } else {
+          setCoachProfile(data)
+        }
+      })
+  }, [profile, sb])
+
+  const handleWizardComplete = (completedProfile) => {
+    setCoachProfile(completedProfile)
+  }
+
   if (session === undefined) return <Splash>Loading...</Splash>
   if (!session) return <LoginScreen sb={sb} />
   if (!profile) return <Splash>Loading profile...</Splash>
   if (profile.is_admin) return <AdminView sb={sb} profile={profile} />
-  return <PipelineApp sb={sb} profile={profile} />
+  if (coachProfile === undefined) return <Splash>Loading...</Splash>
+  if (!coachProfile || !coachProfile.wizard_completed) return <OnboardingWizard sb={sb} profile={profile} existingData={coachProfile} onComplete={handleWizardComplete} />
+  return <PipelineApp sb={sb} profile={profile} coachProfile={coachProfile} />
 }
 
 // ─── LOGIN ────────────────────────────────────────────────────
@@ -236,6 +258,462 @@ function LoginScreen({sb}) {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── ONBOARDING WIZARD ────────────────────────────────────────
+function OnboardingWizard({sb, profile, existingData, onComplete}) {
+  const [step, setStep] = useState(1)
+  const [saving, setSaving] = useState(false)
+  const [data, setData] = useState({
+    niche_who: existingData?.niche_who || '',
+    niche_problem: existingData?.niche_problem || '',
+    niche_result: existingData?.niche_result || '',
+    lead_magnet_name: existingData?.lead_magnet_name || '',
+    lead_magnet_description: existingData?.lead_magnet_description || '',
+    lead_magnet_delivery: existingData?.lead_magnet_delivery || '',
+    offer_name: existingData?.offer_name || '',
+    offer_description: existingData?.offer_description || '',
+    offer_price: existingData?.offer_price || '',
+    offer_sales_method: existingData?.offer_sales_method || '',
+    coach_story: existingData?.coach_story || '',
+    coach_result_example: existingData?.coach_result_example || '',
+  })
+
+  const set = (key, val) => setData(d => ({...d, [key]: val}))
+
+  // Step validation
+  const step1Valid = data.niche_who.trim() && data.niche_problem.trim() && data.niche_result.trim()
+  const step2Valid = data.lead_magnet_delivery === 'none' || (data.lead_magnet_name.trim() && data.lead_magnet_description.trim() && data.lead_magnet_delivery)
+  const step3Valid = data.offer_name.trim() && data.offer_description.trim() && data.offer_price.trim() && data.offer_sales_method
+  const step4Valid = data.coach_story.trim() && data.coach_result_example.trim()
+
+  const canProceed = (step === 1 && step1Valid) || (step === 2 && step2Valid) || (step === 3 && step3Valid) || (step === 4 && step4Valid)
+
+  const handleFinish = async () => {
+    setSaving(true)
+    const payload = { ...data, user_id: profile.id, wizard_completed: true }
+    
+    let result
+    if (existingData?.id) {
+      result = await sb.from('coach_profiles').update(payload).eq('id', existingData.id).select().single()
+    } else {
+      result = await sb.from('coach_profiles').insert(payload).select().single()
+    }
+    
+    setSaving(false)
+    if (result.error) {
+      alert('Error saving profile: ' + result.error.message)
+      return
+    }
+    onComplete(result.data)
+  }
+
+  // Assembled dream client sentence
+  const dreamClient = data.niche_who && data.niche_problem && data.niche_result
+    ? `I help ${data.niche_who} who are struggling with ${data.niche_problem} so they can ${data.niche_result}.`
+    : ''
+
+  return (
+    <div style={{minHeight:'100vh',background:C.black,fontFamily:'Inter,sans-serif'}}>
+      <GlobalStyles/>
+      
+      {/* Header */}
+      <div style={{textAlign:'center',padding:'24px 20px 0'}}>
+        <div style={{fontFamily:'Oswald,sans-serif',fontSize:18,color:C.gold,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px'}}>Insta Client Engine</div>
+        <div style={{color:C.muted,fontSize:13,marginTop:4}}>Coach Setup</div>
+        <div style={{color:C.dim,fontSize:14,marginTop:8,fontStyle:'italic'}}>"This takes 5 minutes. It makes everything in the app 10x more useful."</div>
+      </div>
+
+      {/* Progress Bar */}
+      <div style={{padding:'20px 24px',maxWidth:600,margin:'0 auto'}}>
+        <div style={{display:'flex',gap:8}}>
+          {[1,2,3,4].map(s => (
+            <div key={s} style={{flex:1,height:6,borderRadius:3,background:s<=step?C.gold:'#3a3a3a',transition:'background .2s'}} />
+          ))}
+        </div>
+        <div style={{color:C.muted,fontSize:13,textAlign:'center',marginTop:8}}>Step {step} of 4</div>
+      </div>
+
+      {/* Step Content */}
+      <div style={{maxWidth:560,margin:'0 auto',padding:'0 20px 40px'}}>
+        
+        {/* STEP 1: YOUR NICHE */}
+        {step === 1 && (
+          <div className="fade">
+            <div style={{fontFamily:'Oswald,sans-serif',fontSize:28,color:C.white,fontWeight:700,marginBottom:8}}>Who do you help?</div>
+            <div style={{color:C.muted,fontSize:15,marginBottom:24,lineHeight:1.5}}>Three fields. Be specific — vague answers = vague AI suggestions.</div>
+            
+            <div style={{marginBottom:20}}>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>I work with...</label>
+              <input value={data.niche_who} onChange={e=>set('niche_who',e.target.value.slice(0,100))} placeholder="e.g. new health coaches, postpartum moms, men over 50, burned-out nurses" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15}}/>
+              <div style={{color:C.dim,fontSize:12,textAlign:'right',marginTop:4}}>{data.niche_who.length}/100</div>
+            </div>
+
+            <div style={{marginBottom:20}}>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>Who are struggling with...</label>
+              <input value={data.niche_problem} onChange={e=>set('niche_problem',e.target.value.slice(0,150))} placeholder="e.g. getting their first paying clients, losing weight after baby, low energy and no motivation" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15}}/>
+              <div style={{color:C.dim,fontSize:12,textAlign:'right',marginTop:4}}>{data.niche_problem.length}/150</div>
+            </div>
+
+            <div style={{marginBottom:24}}>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>And want to...</label>
+              <input value={data.niche_result} onChange={e=>set('niche_result',e.target.value.slice(0,150))} placeholder="e.g. build a full-time coaching business, lose 20lbs without giving up their life, feel like themselves again" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15}}/>
+              <div style={{color:C.dim,fontSize:12,textAlign:'right',marginTop:4}}>{data.niche_result.length}/150</div>
+            </div>
+
+            {/* Live Preview */}
+            {dreamClient && (
+              <div style={{background:'#1a1a1a',border:`2px solid ${C.gold}`,borderRadius:12,padding:'16px 18px',marginBottom:24}}>
+                <div style={{color:C.gold,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>Your dream client in one sentence:</div>
+                <div style={{color:C.white,fontSize:16,lineHeight:1.6,fontStyle:'italic'}}>"{dreamClient}"</div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* STEP 2: YOUR LEAD MAGNET */}
+        {step === 2 && (
+          <div className="fade">
+            <div style={{fontFamily:'Oswald,sans-serif',fontSize:28,color:C.white,fontWeight:700,marginBottom:8}}>{"What's your free offer?"}</div>
+            <div style={{color:C.muted,fontSize:15,marginBottom:24,lineHeight:1.5}}>Your lead magnet is the first thing prospects get from you. The AI needs to know this so it can reference it at the right moment in conversations.</div>
+            
+            <div style={{marginBottom:20}}>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>Lead magnet name</label>
+              <input value={data.lead_magnet_name} onChange={e=>set('lead_magnet_name',e.target.value)} placeholder="e.g. The 5-Day Clean Eating Kickstart, Free Client Attraction Checklist" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15}}/>
+            </div>
+
+            <div style={{marginBottom:20}}>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>What does it do for them?</label>
+              <textarea value={data.lead_magnet_description} onChange={e=>set('lead_magnet_description',e.target.value.slice(0,200))} placeholder="e.g. Shows new health coaches how to get their first 3 clients without posting every day" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15,resize:'vertical',minHeight:80}}/>
+              <div style={{color:C.dim,fontSize:12,textAlign:'right',marginTop:4}}>{data.lead_magnet_description.length}/200</div>
+            </div>
+
+            <div style={{marginBottom:20}}>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>How do they get it?</label>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                {[
+                  {id:'dm',label:'DM me for it'},
+                  {id:'link_in_bio',label:'Link in bio'},
+                  {id:'email_optin',label:'Email opt-in'},
+                  {id:'none',label:"I don't have one yet"},
+                ].map(opt => (
+                  <button key={opt.id} onClick={()=>set('lead_magnet_delivery',opt.id)} style={{
+                    background: data.lead_magnet_delivery===opt.id ? C.gold+'22' : '#2a2a2a',
+                    border: `2px solid ${data.lead_magnet_delivery===opt.id ? C.gold : '#3a3a3a'}`,
+                    color: data.lead_magnet_delivery===opt.id ? C.gold : C.white,
+                    padding:'12px 14px',borderRadius:10,fontSize:14,cursor:'pointer',transition:'all .15s'
+                  }}>{opt.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {data.lead_magnet_delivery === 'none' && (
+              <div style={{background:'#2a2a2a',borderLeft:`3px solid ${C.gold}`,padding:'12px 16px',borderRadius:'0 8px 8px 0',marginBottom:20}}>
+                <div style={{color:C.muted,fontSize:14,lineHeight:1.6}}>No problem — your AI suggestions will focus on direct conversation rather than lead magnet delivery for now. You can update this anytime in Settings.</div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* STEP 3: YOUR CORE OFFER */}
+        {step === 3 && (
+          <div className="fade">
+            <div style={{fontFamily:'Oswald,sans-serif',fontSize:28,color:C.white,fontWeight:700,marginBottom:8}}>What do you sell?</div>
+            <div style={{color:C.muted,fontSize:15,marginBottom:24,lineHeight:1.5}}>This is what the pipeline is ultimately building toward. The AI will never pitch this directly — but knowing it helps craft conversations that naturally lead here.</div>
+            
+            <div style={{marginBottom:20}}>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>Program or offer name</label>
+              <input value={data.offer_name} onChange={e=>set('offer_name',e.target.value)} placeholder="e.g. The 12-Week Body Reset, 1:1 Business Coaching Intensive" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15}}/>
+            </div>
+
+            <div style={{marginBottom:20}}>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>What does it deliver?</label>
+              <textarea value={data.offer_description} onChange={e=>set('offer_description',e.target.value.slice(0,250))} placeholder="e.g. 12 weeks of 1:1 coaching + weekly calls + custom meal plan — clients lose 15–25lbs and build sustainable habits" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15,resize:'vertical',minHeight:80}}/>
+              <div style={{color:C.dim,fontSize:12,textAlign:'right',marginTop:4}}>{data.offer_description.length}/250</div>
+            </div>
+
+            <div style={{marginBottom:20}}>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>Investment</label>
+              <input value={data.offer_price} onChange={e=>set('offer_price',e.target.value)} placeholder="e.g. $2,500 / $497/month / $997" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15}}/>
+              <div style={{color:C.dim,fontSize:13,marginTop:6}}>This helps the AI calibrate conversation depth — a $200 offer needs fewer touches than a $3,000 program.</div>
+            </div>
+
+            <div style={{marginBottom:20}}>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>How do you sell it?</label>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                {[
+                  {id:'discovery_call',label:'Discovery call'},
+                  {id:'direct_dm',label:'Direct DM close'},
+                  {id:'application',label:'Application'},
+                  {id:'sales_page',label:'Sales page'},
+                ].map(opt => (
+                  <button key={opt.id} onClick={()=>set('offer_sales_method',opt.id)} style={{
+                    background: data.offer_sales_method===opt.id ? C.gold+'22' : '#2a2a2a',
+                    border: `2px solid ${data.offer_sales_method===opt.id ? C.gold : '#3a3a3a'}`,
+                    color: data.offer_sales_method===opt.id ? C.gold : C.white,
+                    padding:'12px 14px',borderRadius:10,fontSize:14,cursor:'pointer',transition:'all .15s'
+                  }}>{opt.label}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: YOUR STORY */}
+        {step === 4 && (
+          <div className="fade">
+            <div style={{fontFamily:'Oswald,sans-serif',fontSize:28,color:C.white,fontWeight:700,marginBottom:8}}>Why do you do this work?</div>
+            <div style={{color:C.muted,fontSize:15,marginBottom:24,lineHeight:1.5}}>The best openers and positioning messages are rooted in your real story. Give the AI something true to work with.</div>
+            
+            <div style={{marginBottom:20}}>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>Your quick origin story</label>
+              <textarea value={data.coach_story} onChange={e=>set('coach_story',e.target.value.slice(0,400))} placeholder="e.g. I was a personal trainer for 8 years before I figured out how to get clients consistently. Once I cracked it, I knew I had to teach other coaches the same system." style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15,resize:'vertical',minHeight:120}}/>
+              <div style={{color:C.dim,fontSize:12,textAlign:'right',marginTop:4}}>{data.coach_story.length}/400</div>
+            </div>
+
+            <div style={{marginBottom:24}}>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>One result you have gotten for a client (real and specific)</label>
+              <textarea value={data.coach_result_example} onChange={e=>set('coach_result_example',e.target.value.slice(0,200))} placeholder="e.g. Helped a postpartum mom lose 22lbs in 14 weeks while working full time and raising two kids under 5" style={{width:'100%',background:'#2a2a2a',border:'2px solid #3a3a3a',color:C.white,padding:'14px 16px',borderRadius:10,fontSize:15,resize:'vertical',minHeight:80}}/>
+              <div style={{color:C.dim,fontSize:12,textAlign:'right',marginTop:4}}>{data.coach_result_example.length}/200</div>
+            </div>
+
+            <div style={{background:'#2a2a2a',borderLeft:`3px solid ${C.gold}`,padding:'14px 16px',borderRadius:'0 8px 8px 0',marginBottom:20}}>
+              <div style={{color:C.muted,fontSize:14,lineHeight:1.6}}>The AI will never fabricate results or put words in your mouth. It uses your story to add authenticity context — not to make claims.</div>
+            </div>
+          </div>
+        )}
+
+        {/* COMPLETION SCREEN */}
+        {step === 5 && (
+          <div className="fade" style={{textAlign:'center'}}>
+            <div style={{fontSize:48,marginBottom:16}}>&#10003;</div>
+            <div style={{fontFamily:'Oswald,sans-serif',fontSize:32,color:C.white,fontWeight:700,marginBottom:12}}>{"You're all set. Let's get to work."}</div>
+            
+            <div style={{background:'#2a2a2a',borderRadius:14,padding:'20px 24px',marginTop:24,marginBottom:24,textAlign:'left'}}>
+              <div style={{color:C.gold,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:12}}>Your Profile Summary</div>
+              
+              <div style={{marginBottom:14}}>
+                <div style={{color:C.dim,fontSize:12,textTransform:'uppercase',marginBottom:4}}>Dream Client</div>
+                <div style={{color:C.white,fontSize:15,lineHeight:1.5,fontStyle:'italic'}}>"{dreamClient}"</div>
+              </div>
+              
+              <div style={{marginBottom:14}}>
+                <div style={{color:C.dim,fontSize:12,textTransform:'uppercase',marginBottom:4}}>Lead Magnet</div>
+                <div style={{color:C.white,fontSize:15}}>{data.lead_magnet_name || '(None yet)'}</div>
+              </div>
+              
+              <div>
+                <div style={{color:C.dim,fontSize:12,textTransform:'uppercase',marginBottom:4}}>Core Offer</div>
+                <div style={{color:C.white,fontSize:15}}>{data.offer_name} — {data.offer_price}</div>
+              </div>
+            </div>
+
+            <div style={{color:C.muted,fontSize:14,lineHeight:1.6,marginBottom:28}}>Every AI suggestion in this dashboard is now personalized to your niche, your offer, and your story. You can update any of this in Settings at any time.</div>
+          </div>
+        )}
+
+        {/* Navigation Buttons */}
+        <div style={{display:'flex',gap:12,marginTop:24}}>
+          {step > 1 && step < 5 && (
+            <button onClick={()=>setStep(s=>s-1)} style={{flex:1,background:'transparent',border:`2px solid ${C.gold}`,color:C.gold,padding:'14px 20px',borderRadius:10,fontSize:16,fontWeight:700,fontFamily:'Oswald,sans-serif',cursor:'pointer'}}>Back</button>
+          )}
+          
+          {step < 4 && (
+            <button onClick={()=>setStep(s=>s+1)} disabled={!canProceed} style={{
+              flex:1,background:canProceed?C.gold:'#3a3a3a',color:canProceed?C.black:'#666',
+              padding:'14px 20px',borderRadius:10,fontSize:16,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',
+              cursor:canProceed?'pointer':'not-allowed',boxShadow:canProceed?'0 4px 16px rgba(246,189,96,0.3)':'none'
+            }}>Next</button>
+          )}
+          
+          {step === 4 && (
+            <button onClick={()=>setStep(5)} disabled={!canProceed} style={{
+              flex:1,background:canProceed?C.gold:'#3a3a3a',color:canProceed?C.black:'#666',
+              padding:'14px 20px',borderRadius:10,fontSize:16,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',
+              cursor:canProceed?'pointer':'not-allowed',boxShadow:canProceed?'0 4px 16px rgba(246,189,96,0.3)':'none'
+            }}>Review & Finish</button>
+          )}
+          
+          {step === 5 && (
+            <button onClick={handleFinish} disabled={saving} style={{
+              flex:1,background:saving?'#3a3a3a':C.gold,color:saving?'#666':C.black,
+              padding:'16px 20px',borderRadius:10,fontSize:18,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',
+              cursor:saving?'not-allowed':'pointer',boxShadow:saving?'none':'0 4px 16px rgba(246,189,96,0.3)'
+            }}>{saving ? 'Saving...' : 'Launch My Dashboard'}</button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── SETTINGS VIEW ────────────────────────────────────────────
+function SettingsView({sb, profile, coachProfile}) {
+  const [data, setData] = useState({
+    niche_who: coachProfile?.niche_who || '',
+    niche_problem: coachProfile?.niche_problem || '',
+    niche_result: coachProfile?.niche_result || '',
+    lead_magnet_name: coachProfile?.lead_magnet_name || '',
+    lead_magnet_description: coachProfile?.lead_magnet_description || '',
+    lead_magnet_delivery: coachProfile?.lead_magnet_delivery || '',
+    offer_name: coachProfile?.offer_name || '',
+    offer_description: coachProfile?.offer_description || '',
+    offer_price: coachProfile?.offer_price || '',
+    offer_sales_method: coachProfile?.offer_sales_method || '',
+    coach_story: coachProfile?.coach_story || '',
+    coach_result_example: coachProfile?.coach_result_example || '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const set = (key, val) => { setData(d => ({...d, [key]: val})); setSaved(false) }
+
+  const handleSave = async () => {
+    setSaving(true)
+    const { error } = await sb.from('coach_profiles').update(data).eq('user_id', profile.id)
+    setSaving(false)
+    if (error) {
+      alert('Error saving: ' + error.message)
+    } else {
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    }
+  }
+
+  const dreamClient = data.niche_who && data.niche_problem && data.niche_result
+    ? `I help ${data.niche_who} who are struggling with ${data.niche_problem} so they can ${data.niche_result}.`
+    : ''
+
+  return (
+    <div style={{padding:'24px 18px 60px',maxWidth:640,margin:'0 auto'}} className="fade">
+      <div style={{fontFamily:'Oswald,sans-serif',fontSize:28,color:C.black,fontWeight:700,marginBottom:6}}>Coach Profile</div>
+      <div style={{color:C.dark,fontSize:15,marginBottom:24,opacity:0.7}}>Update your profile to personalize AI suggestions</div>
+
+      {/* Niche Section */}
+      <div style={{background:C.card,borderRadius:14,padding:18,boxShadow:C.shadow3d,marginBottom:20}}>
+        <div style={{background:C.cardInner,borderRadius:10,padding:18}}>
+          <div style={{fontFamily:'Oswald,sans-serif',fontSize:18,color:C.text,fontWeight:700,marginBottom:14,borderBottom:`2px solid ${C.gold}`,paddingBottom:8}}>Your Niche</div>
+          
+          <div style={{marginBottom:14}}>
+            <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.3px',marginBottom:6}}>I work with...</label>
+            <input value={data.niche_who} onChange={e=>set('niche_who',e.target.value.slice(0,100))} placeholder="e.g. new health coaches, postpartum moms" style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'11px 14px',borderRadius:8,fontSize:14}}/>
+          </div>
+
+          <div style={{marginBottom:14}}>
+            <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.3px',marginBottom:6}}>Who are struggling with...</label>
+            <input value={data.niche_problem} onChange={e=>set('niche_problem',e.target.value.slice(0,150))} placeholder="e.g. getting their first paying clients" style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'11px 14px',borderRadius:8,fontSize:14}}/>
+          </div>
+
+          <div style={{marginBottom:14}}>
+            <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.3px',marginBottom:6}}>And want to...</label>
+            <input value={data.niche_result} onChange={e=>set('niche_result',e.target.value.slice(0,150))} placeholder="e.g. build a full-time coaching business" style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'11px 14px',borderRadius:8,fontSize:14}}/>
+          </div>
+
+          {dreamClient && (
+            <div style={{background:C.gold+'15',border:`2px solid ${C.gold}`,borderRadius:8,padding:'10px 14px'}}>
+              <div style={{color:C.muted,fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.3px',marginBottom:4}}>Dream Client</div>
+              <div style={{color:C.text,fontSize:14,lineHeight:1.5,fontStyle:'italic'}}>"{dreamClient}"</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Lead Magnet Section */}
+      <div style={{background:C.card,borderRadius:14,padding:18,boxShadow:C.shadow3d,marginBottom:20}}>
+        <div style={{background:C.cardInner,borderRadius:10,padding:18}}>
+          <div style={{fontFamily:'Oswald,sans-serif',fontSize:18,color:C.text,fontWeight:700,marginBottom:14,borderBottom:`2px solid ${C.gold}`,paddingBottom:8}}>Lead Magnet</div>
+          
+          <div style={{marginBottom:14}}>
+            <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.3px',marginBottom:6}}>Name</label>
+            <input value={data.lead_magnet_name} onChange={e=>set('lead_magnet_name',e.target.value)} placeholder="e.g. The 5-Day Clean Eating Kickstart" style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'11px 14px',borderRadius:8,fontSize:14}}/>
+          </div>
+
+          <div style={{marginBottom:14}}>
+            <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.3px',marginBottom:6}}>Description</label>
+            <textarea value={data.lead_magnet_description} onChange={e=>set('lead_magnet_description',e.target.value.slice(0,200))} placeholder="What does it do for them?" style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'11px 14px',borderRadius:8,fontSize:14,resize:'vertical',minHeight:60}}/>
+          </div>
+
+          <div>
+            <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.3px',marginBottom:6}}>Delivery Method</label>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+              {[{id:'dm',label:'DM'},{id:'link_in_bio',label:'Link in bio'},{id:'email_optin',label:'Email'},{id:'none',label:'None'}].map(opt => (
+                <button key={opt.id} onClick={()=>set('lead_magnet_delivery',opt.id)} style={{
+                  background: data.lead_magnet_delivery===opt.id ? C.gold : '#f5f5f5',
+                  color: data.lead_magnet_delivery===opt.id ? C.black : C.text,
+                  border: `2px solid ${data.lead_magnet_delivery===opt.id ? C.gold : '#e0e0e0'}`,
+                  padding:'8px 14px',borderRadius:8,fontSize:13,fontWeight:600,cursor:'pointer'
+                }}>{opt.label}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Core Offer Section */}
+      <div style={{background:C.card,borderRadius:14,padding:18,boxShadow:C.shadow3d,marginBottom:20}}>
+        <div style={{background:C.cardInner,borderRadius:10,padding:18}}>
+          <div style={{fontFamily:'Oswald,sans-serif',fontSize:18,color:C.text,fontWeight:700,marginBottom:14,borderBottom:`2px solid ${C.gold}`,paddingBottom:8}}>Core Offer</div>
+          
+          <div style={{marginBottom:14}}>
+            <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.3px',marginBottom:6}}>Program Name</label>
+            <input value={data.offer_name} onChange={e=>set('offer_name',e.target.value)} placeholder="e.g. The 12-Week Body Reset" style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'11px 14px',borderRadius:8,fontSize:14}}/>
+          </div>
+
+          <div style={{marginBottom:14}}>
+            <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.3px',marginBottom:6}}>Description</label>
+            <textarea value={data.offer_description} onChange={e=>set('offer_description',e.target.value.slice(0,250))} placeholder="What does it deliver?" style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'11px 14px',borderRadius:8,fontSize:14,resize:'vertical',minHeight:60}}/>
+          </div>
+
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+            <div>
+              <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.3px',marginBottom:6}}>Investment</label>
+              <input value={data.offer_price} onChange={e=>set('offer_price',e.target.value)} placeholder="e.g. $2,500" style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'11px 14px',borderRadius:8,fontSize:14}}/>
+            </div>
+            <div>
+              <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.3px',marginBottom:6}}>Sales Method</label>
+              <select value={data.offer_sales_method} onChange={e=>set('offer_sales_method',e.target.value)} style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'11px 14px',borderRadius:8,fontSize:14}}>
+                <option value="">Select...</option>
+                <option value="discovery_call">Discovery Call</option>
+                <option value="direct_dm">Direct DM Close</option>
+                <option value="application">Application</option>
+                <option value="sales_page">Sales Page</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Story Section */}
+      <div style={{background:C.card,borderRadius:14,padding:18,boxShadow:C.shadow3d,marginBottom:24}}>
+        <div style={{background:C.cardInner,borderRadius:10,padding:18}}>
+          <div style={{fontFamily:'Oswald,sans-serif',fontSize:18,color:C.text,fontWeight:700,marginBottom:14,borderBottom:`2px solid ${C.gold}`,paddingBottom:8}}>Your Story</div>
+          
+          <div style={{marginBottom:14}}>
+            <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.3px',marginBottom:6}}>Origin Story</label>
+            <textarea value={data.coach_story} onChange={e=>set('coach_story',e.target.value.slice(0,400))} placeholder="Why do you do this work?" style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'11px 14px',borderRadius:8,fontSize:14,resize:'vertical',minHeight:80}}/>
+            <div style={{color:C.dim,fontSize:11,textAlign:'right',marginTop:4}}>{data.coach_story.length}/400</div>
+          </div>
+
+          <div>
+            <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.3px',marginBottom:6}}>A Real Client Result</label>
+            <textarea value={data.coach_result_example} onChange={e=>set('coach_result_example',e.target.value.slice(0,200))} placeholder="e.g. Helped a postpartum mom lose 22lbs in 14 weeks..." style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'11px 14px',borderRadius:8,fontSize:14,resize:'vertical',minHeight:60}}/>
+            <div style={{color:C.dim,fontSize:11,textAlign:'right',marginTop:4}}>{data.coach_result_example.length}/200</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Save Button */}
+      <button onClick={handleSave} disabled={saving} style={{
+        width:'100%',background:saved?'#27AE60':saving?C.muted:C.black,color:C.white,
+        padding:'14px',borderRadius:10,fontSize:16,fontWeight:700,fontFamily:'Oswald,sans-serif',
+        border:'none',cursor:saving?'not-allowed':'pointer',boxShadow:'0 4px 12px rgba(0,0,0,0.2)',transition:'all .2s'
+      }}>
+        {saved ? 'Saved!' : saving ? 'Saving...' : 'Save Changes'}
+      </button>
+
+      <div style={{color:C.muted,fontSize:13,textAlign:'center',marginTop:14,lineHeight:1.5}}>Changes affect all future AI suggestions immediately.</div>
     </div>
   )
 }
@@ -399,7 +877,7 @@ function AdminView({sb, profile}) {
 }
 
 // ─── STUDENT PIPELINE APP ─────────────────────────────────────
-function PipelineApp({sb, profile}) {
+function PipelineApp({sb, profile, coachProfile}) {
   const [prospects, setProspects] = useState([])
   const [touches,   setTouches]   = useState([])
   const [metrics,   setMetrics]   = useState(null)
@@ -551,7 +1029,7 @@ function PipelineApp({sb, profile}) {
           <span style={{fontFamily:'Oswald,sans-serif',color:C.gold,fontSize:22,fontWeight:700,textTransform:'uppercase'}}>Insta Client Engine</span>
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          {['pipeline','daily','guide'].map(v=>(
+          {['pipeline','daily','guide','settings'].map(v=>(
               <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.gold:'rgba(255,255,255,0.1)',color:view===v?C.black:C.white,padding:'10px 18px',borderRadius:10,fontSize:15,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:view===v?'none':'1px solid rgba(255,255,255,0.2)',cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s',boxShadow:view===v?'0 2px 8px rgba(246,189,96,0.4)':'none'}}>
                 {v}
               </button>
@@ -960,6 +1438,11 @@ OBJECTION HANDLING: Stay curious. Ask questions. Don't push — pull.`}
         </div>
       )}
 
+      {/* SETTINGS */}
+      {view==='settings' && (
+        <SettingsView sb={sb} profile={profile} coachProfile={coachProfile} />
+      )}
+
       {/* DETAIL */}
       {view==='detail' && focused && (()=>{
         const p=focused,ch=CHANNELS.find(c=>c.id===p.channel),pts=pTouches(p.id)
@@ -1039,9 +1522,9 @@ OBJECTION HANDLING: Stay curious. Ask questions. Don't push — pull.`}
         )
       })()}
 
-      {addOpen&&<Overlay onClose={()=>setAddOpen(false)}><AddForm onSubmit={addProspect} onCancel={()=>setAddOpen(false)} saving={saving}/></Overlay>}
+      {addOpen&&<Overlay onClose={()=>setAddOpen(false)}><AddForm onSubmit={addProspect} onCancel={()=>setAddOpen(false)} saving={saving} userId={uid}/></Overlay>}
       {touchFor&&<Overlay onClose={()=>setTouchFor(null)}><TouchForm prospect={prospects.find(p=>p.id===touchFor)} onSubmit={(type,note)=>logTouch(touchFor,type,note)} onCancel={()=>setTouchFor(null)}/></Overlay>}
-      {aiFor&&<Overlay onClose={()=>setAiFor(null)}><AISuggestionForm prospect={prospects.find(p=>p.id===aiFor.id)} channel={aiFor.channel} onClose={()=>setAiFor(null)}/></Overlay>}
+      {aiFor&&<Overlay onClose={()=>setAiFor(null)}><AISuggestionForm prospect={prospects.find(p=>p.id===aiFor.id)} channel={aiFor.channel} onClose={()=>setAiFor(null)} userId={uid}/></Overlay>}
     </div>
   )
 }
@@ -1105,7 +1588,7 @@ function MetricsRow({m}) {
   )
 }
 
-function AddForm({onSubmit,onCancel,saving}) {
+function AddForm({onSubmit,onCancel,saving,userId}) {
   const [f,setF]=useState({name:'',handle:'',source:'',notes:'',channel:'3',intent:'cold'})
   const [sourceSelection, setSourceSelection]=useState(null)
   const [scriptLoading, setScriptLoading]=useState(false)
@@ -1181,7 +1664,8 @@ function AddForm({onSubmit,onCancel,saving}) {
           whereFound: sourceSelection.label,
           channel: f.channel,
           intent: f.intent || 'cold',
-          notes: f.notes || ''
+          notes: f.notes || '',
+          userId: userId
         })
       })
       const data = await res.json()
@@ -1373,7 +1857,7 @@ function TouchForm({prospect,onSubmit,onCancel}) {
   )
 }
 
-function AISuggestionForm({prospect, channel, onClose}) {
+function AISuggestionForm({prospect, channel, onClose, userId}) {
   const [convoText, setConvoText] = useState('')
   const [selChannel, setSelChannel] = useState(channel || 1)
   const [loading, setLoading] = useState(false)
@@ -1392,7 +1876,7 @@ function AISuggestionForm({prospect, channel, onClose}) {
       const res = await fetch('/api/ai-suggestion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationText: convoText.trim(), channel: selChannel }),
+        body: JSON.stringify({ conversationText: convoText.trim(), channel: selChannel, userId: userId }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Request failed')
