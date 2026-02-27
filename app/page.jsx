@@ -1106,74 +1106,243 @@ function MetricsRow({m}) {
 }
 
 function AddForm({onSubmit,onCancel,saving}) {
-  const [f,setF]=useState({name:'',handle:'',source:'',notes:'',channel:'3',intent:''})
-  const [helperUsed, setHelperUsed]=useState(null)
+  const [f,setF]=useState({name:'',handle:'',source:'',notes:'',channel:'3',intent:'cold'})
+  const [sourceSelection, setSourceSelection]=useState(null)
+  const [scriptLoading, setScriptLoading]=useState(false)
+  const [generatedScript, setGeneratedScript]=useState(null)
+  const [scriptError, setScriptError]=useState(null)
+  const [copied, setCopied]=useState(false)
   const set=(k,v)=>setF(p=>({...p,[k]:v}))
   const ok=f.name.trim()&&f.handle.trim()
   
-  const HELPER_OPTIONS = [
-    {label:"They just followed me", channel:'1', confirm:'Great! CH1 is for new followers. Send a welcome message within 24-48 hours.'},
-    {label:"I found them but haven't messaged yet", channel:'3', confirm:'CH3 is your cold outreach channel. Send a personalized Curiosity Opener.'},
-    {label:"We've already been talking", channel:'2', confirm:'CH2 is for warm conversations. Keep adding value and building trust.'},
+  // WHERE FOUND OPTIONS with icons, auto-channel suggestions, and guidance
+  const SOURCE_OPTIONS = [
+    {id:'followed',icon:'👤',label:'They followed me',channels:['1'],guidance:'New follower = 24-48hr window. Message them before they forget you exist.'},
+    {id:'hashtag',icon:'#️⃣',label:'I found them via hashtag',channels:['3','4'],guidance:"Haven't connected yet — start with engagement (CH4) or go straight to a Curiosity Opener (CH3)."},
+    {id:'competitor',icon:'🔍',label:"I found them via a competitor's followers",channels:['3','4'],guidance:'Verified cold prospect. Warm up with engagement first, then Curiosity Opener.'},
+    {id:'engagement',icon:'💬',label:'Engagement mining (they commented/liked)',channels:['2','3'],guidance:"They've shown active intent. Strong candidate for a direct Curiosity Opener."},
+    {id:'referral',icon:'🤝',label:'Referral / someone sent them',channels:['1','2'],guidance:"Warm intro = higher trust baseline. Open conversation naturally, don't pitch early."},
+    {id:'talking',icon:'💭',label:"We've already been talking",channels:['2'],guidance:'Active conversation = CH2. Add value and keep building trust.'},
   ]
   
-  const selectHelper = (opt) => {
-    set('channel', opt.channel)
-    setHelperUsed(opt)
+  // CHANNEL DESCRIPTIONS
+  const CHANNEL_DESC = {
+    '1':'They just followed you. Your job: open a conversation within 48hrs.',
+    '2':"You're already talking. Your job: add value, build trust, don't rush the offer.",
+    '3':'Cold target. Your job: send a personalized Curiosity Opener and get one reply.',
+    '4':'Pre-DM warmup. Like, comment, react to their content for 3-5 days before messaging.',
+    '5':'Hot lead. Your job: diagnose, position, and make a soft offer.',
+  }
+  
+  // INTENT CARDS with labels and descriptions
+  const INTENT_CARDS = [
+    {id:'hot',emoji:'🔥',label:'Hot',desc:'Buying signals present. Asked about pricing, programs, or results. Ready for CH5.',color:'#e74c3c'},
+    {id:'warm',emoji:'⚡',label:'Warm',desc:"Engaged and responsive but hasn't shown direct buying intent yet.",color:'#f39c12'},
+    {id:'cold',emoji:'❄️',label:'Cold',desc:'No interaction yet or very early stage. Just starting the relationship.',color:'#3498db'},
+  ]
+  
+  // DYNAMIC NOTES PLACEHOLDERS by channel
+  const NOTES_PLACEHOLDERS = {
+    '1':"What did you notice on their profile? Bio keywords, what they post about, any struggle signals. What's your opener going to reference?",
+    '2':"What have they said so far? What's their goal or pain? What do they do for work? What's the next logical question?",
+    '3':'What specifically caught your attention? Post topic, bio detail, comment they left somewhere. This is what your Curiosity Opener will reference.',
+    '4':"What content of theirs are you going to engage with? What's their niche? What signals make them a fit?",
+    '5':'What buying signals have they shown? What exact words did they use about their problem? What objections might come up?',
+  }
+  
+  // NOTES CHECKLISTS by channel
+  const NOTES_CHECKLIST = {
+    '1':['What they post about','Bio keywords','Any struggle signals'],
+    '2':['Their stated goal','Their biggest frustration','Where they are in their journey'],
+    '3':['Specific post to reference','Bio detail','Why they\'re a fit'],
+    '4':['Content themes','Engagement patterns','Niche fit signals'],
+    '5':['Exact words they used','Buying signals noted','Likely objections'],
+  }
+  
+  const selectSource = (opt) => {
+    setSourceSelection(opt)
+    set('source', opt.label)
+    // Auto-select first recommended channel
+    if(opt.channels.length>0) set('channel', opt.channels[0])
+  }
+  
+  const canGenerateScript = sourceSelection && f.channel
+  
+  const generateScript = async () => {
+    if(!canGenerateScript) return
+    setScriptLoading(true)
+    setScriptError(null)
+    setGeneratedScript(null)
+    try {
+      const res = await fetch('/api/first-touch', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          whereFound: sourceSelection.label,
+          channel: f.channel,
+          intent: f.intent || 'cold',
+          notes: f.notes || ''
+        })
+      })
+      const data = await res.json()
+      if(!res.ok) throw new Error(data.error)
+      setGeneratedScript(data.script)
+    } catch(err) {
+      setScriptError("Couldn't generate right now — add your notes and try again.")
+    } finally {
+      setScriptLoading(false)
+    }
+  }
+  
+  const copyScript = () => {
+    if(!generatedScript) return
+    navigator.clipboard.writeText(generatedScript)
+    setCopied(true)
+    setTimeout(()=>setCopied(false),2000)
+  }
+  
+  const formatScript = (text) => {
+    return text.split('\n').map((line,i) => {
+      if(line.startsWith('**') && line.endsWith('**')) {
+        const label = line.replace(/\*\*/g,'')
+        return <div key={i} style={{fontFamily:'Oswald,sans-serif',fontSize:13,fontWeight:700,color:C.gold,textTransform:'uppercase',letterSpacing:'.4px',marginTop:i>0?12:0,marginBottom:4}}>{label}</div>
+      }
+      if(line.trim()==='') return <div key={i} style={{height:6}}/>
+      return <div key={i} style={{color:C.text,fontSize:14,lineHeight:1.6}}>{line}</div>
+    })
   }
   
   return (
-    <>
+    <div style={{maxHeight:'75vh',overflowY:'auto',paddingRight:8}}>
       <div style={{fontFamily:'Oswald,sans-serif',fontSize:22,color:C.text,fontWeight:700,marginBottom:16}}>Add Prospect</div>
       
-      {/* Decision Helper */}
-      <div style={{background:'#f8f8f8',border:'2px solid #e8e8e8',borderRadius:12,padding:'14px 16px',marginBottom:16}}>
-        <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,color:C.muted,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:10}}>Where does this person go?</div>
-        <div style={{display:'flex',flexDirection:'column',gap:6}}>
-          {HELPER_OPTIONS.map((opt,i)=>(
-            <button key={i} onClick={()=>selectHelper(opt)} style={{background:helperUsed?.channel===opt.channel?C.gold+'22':C.white,border:`2px solid ${helperUsed?.channel===opt.channel?C.gold:'#e0e0e0'}`,borderRadius:8,padding:'10px 14px',textAlign:'left',fontSize:14,color:C.text,cursor:'pointer',transition:'all .12s'}}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        {helperUsed && (
-          <div style={{marginTop:10,color:C.muted,fontSize:13,lineHeight:1.5,paddingLeft:4}}>
-            <span style={{color:C.gold}}>→</span> {helperUsed.confirm}
-          </div>
-        )}
-      </div>
-      
-      {[{k:'name',l:'Full Name *',ph:'Jane Smith'},{k:'handle',l:'Handle *',ph:'@janesmith'},{k:'source',l:'Where Found',ph:'hashtag, referral...'}].map(row=>(
+      {/* FIELD 1: Name + Handle */}
+      {[{k:'name',l:'Full Name *',ph:'Jane Smith'},{k:'handle',l:'Handle *',ph:'@janesmith'}].map(row=>(
         <div key={row.k} style={{marginBottom:12}}>
           <SL small>{row.l}</SL>
           <input value={f[row.k]} onChange={e=>set(row.k,e.target.value)} placeholder={row.ph} style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'10px 13px',borderRadius:10,fontSize:15}}/>
         </div>
       ))}
+      
+      {/* FIELD 2: Where Found - Smart Selector */}
       <div style={{marginBottom:12}}>
-        <SL small>Starting Channel {helperUsed && <span style={{color:C.muted,fontWeight:400,textTransform:'none'}}>(or pick manually)</span>}</SL>
+        <SL small>Where Found</SL>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+          {SOURCE_OPTIONS.map(opt=>(
+            <button key={opt.id} onClick={()=>selectSource(opt)} style={{
+              background:sourceSelection?.id===opt.id?C.gold+'22':C.white,
+              border:`2px solid ${sourceSelection?.id===opt.id?C.gold:'#e0e0e0'}`,
+              borderRadius:10,padding:'10px 12px',textAlign:'left',cursor:'pointer',transition:'all .12s',display:'flex',alignItems:'center',gap:8
+            }}>
+              <span style={{fontSize:18}}>{opt.icon}</span>
+              <span style={{fontSize:13,color:C.text,lineHeight:1.3}}>{opt.label}</span>
+            </button>
+          ))}
+        </div>
+        {/* Guidance note */}
+        {sourceSelection && (
+          <div style={{marginTop:10,background:C.card,borderRadius:8,padding:'10px 14px',color:C.white,fontSize:13,lineHeight:1.5}}>
+            <span style={{color:C.gold,marginRight:6}}>→</span>{sourceSelection.guidance}
+          </div>
+        )}
+      </div>
+      
+      {/* FIELD 3: Starting Channel */}
+      <div style={{marginBottom:12}}>
+        <SL small>Starting Channel</SL>
         <div style={{display:'flex',gap:5}}>
           {CHANNELS.map(ch=>(
-            <button key={ch.id} onClick={()=>{set('channel',String(ch.id));setHelperUsed(null)}} style={{flex:1,background:f.channel===String(ch.id)?ch.color:'#f5f5f5',color:f.channel===String(ch.id)?'#fff':C.text,border:`2px solid ${f.channel===String(ch.id)?ch.color:'#e0e0e0'}`,padding:'8px 0',borderRadius:8,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',cursor:'pointer',transition:'all .12s'}}>{ch.key}</button>
+            <button key={ch.id} onClick={()=>set('channel',String(ch.id))} style={{flex:1,background:f.channel===String(ch.id)?ch.color:'#f5f5f5',color:f.channel===String(ch.id)?'#fff':C.text,border:`2px solid ${f.channel===String(ch.id)?ch.color:'#e0e0e0'}`,padding:'8px 0',borderRadius:8,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',cursor:'pointer',transition:'all .12s'}}>{ch.key}</button>
           ))}
         </div>
+        {/* Channel description */}
+        {f.channel && (
+          <div style={{marginTop:8,color:C.muted,fontSize:13,lineHeight:1.5,paddingLeft:2}}>
+            {CHANNEL_DESC[f.channel]}
+          </div>
+        )}
       </div>
+      
+      {/* FIELD 4: Intent Level - Cards */}
       <div style={{marginBottom:12}}>
         <SL small>Intent Level</SL>
-        <div style={{display:'flex',gap:5}}>
-          {INTENT.map(i=>(
-            <button key={i.id} onClick={()=>set('intent',i.id)} style={{flex:1,background:f.intent===i.id?i.color+'22':'#f5f5f5',color:f.intent===i.id?i.color:C.dim,border:`2px solid ${f.intent===i.id?i.color:'#e0e0e0'}`,padding:'8px 0',borderRadius:8,fontSize:14,fontWeight:600,cursor:'pointer',transition:'all .12s'}}>{i.emoji}</button>
+        <div style={{display:'flex',flexDirection:'column',gap:6}}>
+          {INTENT_CARDS.map(ic=>(
+            <button key={ic.id} onClick={()=>set('intent',ic.id)} style={{
+              background:f.intent===ic.id?ic.color+'15':C.white,
+              border:`2px solid ${f.intent===ic.id?ic.color:'#e0e0e0'}`,
+              borderRadius:10,padding:'10px 14px',textAlign:'left',cursor:'pointer',transition:'all .12s',display:'flex',alignItems:'flex-start',gap:10
+            }}>
+              <span style={{fontSize:20}}>{ic.emoji}</span>
+              <div>
+                <div style={{fontFamily:'Oswald,sans-serif',fontSize:14,fontWeight:700,color:f.intent===ic.id?ic.color:C.text}}>{ic.label}</div>
+                <div style={{fontSize:12,color:C.muted,lineHeight:1.4,marginTop:2}}>{ic.desc}</div>
+              </div>
+            </button>
           ))}
         </div>
       </div>
+      
+      {/* FIELD 5: Notes with dynamic prompt */}
       <div style={{marginBottom:16}}>
         <SL small>Notes</SL>
-        <textarea value={f.notes} onChange={e=>set('notes',e.target.value)} placeholder="Pain points, bio detail, what they're working on..." style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'10px 13px',borderRadius:10,fontSize:14,resize:'vertical',minHeight:70,lineHeight:1.5}}/>
+        {/* Checklist reminder */}
+        <div style={{background:'#fafafa',border:'1px solid #eee',borderRadius:8,padding:'8px 12px',marginBottom:8}}>
+          <div style={{fontSize:11,color:C.muted,textTransform:'uppercase',letterSpacing:'.3px',marginBottom:4}}>{"Don't miss these:"}</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:'4px 12px'}}>
+            {(NOTES_CHECKLIST[f.channel]||NOTES_CHECKLIST['3']).map((item,i)=>(
+              <span key={i} style={{fontSize:12,color:C.dim}}>☐ {item}</span>
+            ))}
+          </div>
+        </div>
+        <textarea value={f.notes} onChange={e=>set('notes',e.target.value)} placeholder={NOTES_PLACEHOLDERS[f.channel]||NOTES_PLACEHOLDERS['3']} style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',color:C.text,padding:'10px 13px',borderRadius:10,fontSize:14,resize:'vertical',minHeight:80,lineHeight:1.5}}/>
       </div>
-      <div style={{display:'flex',gap:8}}>
+      
+      {/* Generate Script Button */}
+      <div style={{marginBottom:16}}>
+        <button 
+          onClick={generateScript} 
+          disabled={!canGenerateScript||scriptLoading}
+          style={{
+            width:'100%',
+            background:canGenerateScript&&!scriptLoading?'#6C3483':'#ddd',
+            color:canGenerateScript&&!scriptLoading?'#fff':'#aaa',
+            padding:'12px 16px',borderRadius:10,fontSize:14,fontWeight:700,fontFamily:'Oswald,sans-serif',
+            border:'none',cursor:canGenerateScript&&!scriptLoading?'pointer':'not-allowed',
+            boxShadow:canGenerateScript&&!scriptLoading?'0 3px 12px rgba(108,52,131,0.25)':'none',
+            transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:8
+          }}
+        >
+          <span style={{fontSize:16}}>✨</span>
+          {scriptLoading?'Sarah\'s brain is working...':'Generate First Touch Script'}
+        </button>
+        
+        {/* Script Error */}
+        {scriptError && (
+          <div style={{marginTop:10,background:C.red+'15',border:`1px solid ${C.red}33`,borderRadius:8,padding:'10px 14px',color:C.red,fontSize:13}}>{scriptError}</div>
+        )}
+        
+        {/* Generated Script Result */}
+        {generatedScript && (
+          <div style={{marginTop:12,background:'#fafafa',border:'2px solid #e8e8e8',borderRadius:12,padding:16}}>
+            {formatScript(generatedScript)}
+            <button onClick={copyScript} style={{
+              marginTop:12,width:'100%',background:copied?'#27AE60':'#6C3483',color:'#fff',
+              padding:'10px 14px',borderRadius:8,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',
+              border:'none',cursor:'pointer',transition:'all .15s'
+            }}>
+              {copied?'Copied!':'Copy Script'}
+            </button>
+          </div>
+        )}
+      </div>
+      
+      {/* Bottom Buttons - pinned */}
+      <div style={{position:'sticky',bottom:0,background:C.cardInner,paddingTop:12,borderTop:'1px solid #eee',display:'flex',gap:8}}>
         <GhostBtn full onClick={onCancel}>Cancel</GhostBtn>
         <GoldBtn full onClick={()=>ok&&!saving&&onSubmit(f)} style={{background:ok&&!saving?C.black:'#ccc',color:ok&&!saving?C.white:C.muted,cursor:ok&&!saving?'pointer':'not-allowed'}}>{saving?'Saving...':'Add to Pipeline'}</GoldBtn>
       </div>
-    </>
+    </div>
   )
 }
 
