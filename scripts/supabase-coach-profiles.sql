@@ -4,9 +4,10 @@
 -- =====================================================
 
 -- 1. CREATE THE COACH_PROFILES TABLE
+-- Note: user_id references auth.users (Supabase's built-in auth table)
 CREATE TABLE IF NOT EXISTS coach_profiles (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   
   -- Step 1: Niche
   niche_who TEXT,
