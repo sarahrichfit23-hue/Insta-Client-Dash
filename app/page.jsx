@@ -279,7 +279,7 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
     offer_name: existingData?.offer_name || '',
     offer_description: existingData?.offer_description || '',
     offer_price: existingData?.offer_price || '',
-    offer_sales_method: existingData?.offer_sales_method || '',
+    offer_sales_method: existingData?.offer_sales_method || [],
     coach_story: existingData?.coach_story || '',
     coach_result_example: existingData?.coach_result_example || '',
   })
@@ -289,7 +289,7 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
   // Step validation - skipped sections are always valid
   const step1Valid = data.niche_who.trim() && data.niche_problem.trim() && data.niche_result.trim()
   const step2Valid = skipLeadMagnet || data.lead_magnet_delivery.includes('not_sure') || (data.lead_magnet_name.trim() && data.lead_magnet_description.trim() && data.lead_magnet_delivery.length > 0)
-  const step3Valid = skipOffer || (data.offer_name.trim() && data.offer_description.trim() && data.offer_price.trim() && data.offer_sales_method)
+  const step3Valid = skipOffer || (data.offer_name.trim() && data.offer_description.trim() && data.offer_price.trim() && data.offer_sales_method.length > 0)
   const step4Valid = skipStory || (data.coach_story.trim() && data.coach_result_example.trim())
 
   const canProceed = (step === 1 && step1Valid) || (step === 2 && step2Valid) || (step === 3 && step3Valid) || (step === 4 && step4Valid)
@@ -492,21 +492,31 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
             </div>
 
             <div style={{marginBottom:20,opacity:skipOffer?0.4:1,pointerEvents:skipOffer?'none':'auto',transition:'opacity .2s'}}>
-              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>How do you sell it?</label>
+              <label style={{display:'block',color:C.gold,fontSize:13,fontWeight:700,fontFamily:'Oswald,sans-serif',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:8}}>How do you sell it? <span style={{fontWeight:400,textTransform:'none',color:C.muted}}>(select all that apply)</span></label>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
                 {[
                   {id:'discovery_call',label:'Discovery call'},
                   {id:'direct_dm',label:'Direct DM close'},
                   {id:'application',label:'Application'},
                   {id:'sales_page',label:'Sales page'},
-                ].map(opt => (
-                  <button key={opt.id} onClick={()=>set('offer_sales_method',opt.id)} style={{
-                    background: data.offer_sales_method===opt.id ? C.gold+'22' : '#2a2a2a',
-                    border: `2px solid ${data.offer_sales_method===opt.id ? C.gold : '#3a3a3a'}`,
-                    color: data.offer_sales_method===opt.id ? C.gold : C.white,
-                    padding:'12px 14px',borderRadius:10,fontSize:14,cursor:'pointer',transition:'all .15s'
-                  }}>{opt.label}</button>
-                ))}
+                ].map(opt => {
+                  const isSelected = Array.isArray(data.offer_sales_method) && data.offer_sales_method.includes(opt.id)
+                  return (
+                    <button key={opt.id} onClick={()=>{
+                      const current = Array.isArray(data.offer_sales_method) ? data.offer_sales_method : []
+                      if(isSelected) {
+                        set('offer_sales_method', current.filter(x => x !== opt.id))
+                      } else {
+                        set('offer_sales_method', [...current, opt.id])
+                      }
+                    }} style={{
+                      background: isSelected ? C.gold+'22' : '#2a2a2a',
+                      border: `2px solid ${isSelected ? C.gold : '#3a3a3a'}`,
+                      color: isSelected ? C.gold : C.white,
+                      padding:'12px 14px',borderRadius:10,fontSize:14,cursor:'pointer',transition:'all .15s'
+                    }}>{opt.label}</button>
+                  )
+                })}
               </div>
             </div>
           </div>
