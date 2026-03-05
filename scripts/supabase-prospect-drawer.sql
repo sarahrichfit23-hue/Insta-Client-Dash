@@ -4,9 +4,10 @@
 -- =============================================================
 
 -- 1. CREATE PROSPECT_NOTES TABLE
+-- Note: prospect_id uses BIGINT to match the existing prospects.id column type
 CREATE TABLE IF NOT EXISTS prospect_notes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  prospect_id UUID NOT NULL REFERENCES prospects(id) ON DELETE CASCADE,
+  prospect_id BIGINT NOT NULL REFERENCES prospects(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   note_text TEXT NOT NULL,
   note_type TEXT NOT NULL DEFAULT 'conversation' CHECK (note_type IN ('conversation', 'observation', 'ai_generated', 'channel_move', 'system')),
@@ -15,9 +16,10 @@ CREATE TABLE IF NOT EXISTS prospect_notes (
 );
 
 -- 2. CREATE PROSPECT_INTEL TABLE
+-- Note: prospect_id uses BIGINT to match the existing prospects.id column type
 CREATE TABLE IF NOT EXISTS prospect_intel (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  prospect_id UUID NOT NULL REFERENCES prospects(id) ON DELETE CASCADE UNIQUE,
+  prospect_id BIGINT NOT NULL REFERENCES prospects(id) ON DELETE CASCADE UNIQUE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   where_found TEXT,
   bio_notes TEXT,
@@ -98,8 +100,9 @@ CREATE TRIGGER trigger_update_prospect_intel_updated_at
 
 -- 8. FUNCTION TO LOG CHANNEL MOVES AUTOMATICALLY
 -- This will be called from the application when moving channels
+-- Note: p_prospect_id uses BIGINT to match the existing prospects.id column type
 CREATE OR REPLACE FUNCTION log_channel_move(
-  p_prospect_id UUID,
+  p_prospect_id BIGINT,
   p_user_id UUID,
   p_from_channel INTEGER,
   p_to_channel INTEGER
@@ -122,6 +125,6 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Grant execute permission
-GRANT EXECUTE ON FUNCTION log_channel_move(UUID, UUID, INTEGER, INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION log_channel_move(BIGINT, UUID, INTEGER, INTEGER) TO authenticated;
 
 SELECT 'Prospect drawer tables and policies created successfully!' as status;
