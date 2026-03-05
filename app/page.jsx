@@ -136,7 +136,7 @@ IF YES — TIER 2 (low ticket)
 IF YES — TIER 3 (discovery call)
 "Best next step is a quick call so I can make sure it's the right fit. Calendar: [LINK]"
 
-━━━━━━━━━━━━━━━━━━━━━━
+━━━━��━━━━━━━━━━━━━━━━━
 
 3-TOUCH FOLLOW-UP (if they go quiet)
 Touch 1 (3-5 days): "Just circling back. Totally fine if timing is off."
@@ -639,6 +639,455 @@ function OnboardingWizard({sb, profile, existingData, onComplete}) {
   )
 }
 
+// ─── SIGNAL TAGS ──────────────────────────────────────────────
+const SIGNAL_TAGS = [
+  { id: 'raised_hand', label: 'Raised Hand', color: '#E67E22' },
+  { id: 'active_struggle', label: 'Active Struggle', color: '#F1C40F' },
+  { id: 'solution_shopper', label: 'Solution Shopper', color: '#3498DB' },
+  { id: 'none', label: 'None', color: '#95A5A6' },
+]
+
+// ─── DREAM 1,000 VIEW ─────────────────────────────────────────
+function Dream1000View({ prospects, touches, onAddProspect, onActivate, onOpenDrawer, userId, sb, onUsageUpdate, onLimitReached, aiUsage }) {
+  const [tab, setTab] = useState('identified')
+  const [search, setSearch] = useState('')
+  const [filterSignal, setFilterSignal] = useState(null)
+  const [filterStatus, setFilterStatus] = useState(null)
+  const [sortBy, setSortBy] = useState('name')
+  const [sortDir, setSortDir] = useState('asc')
+  const [addModalOpen, setAddModalOpen] = useState(false)
+  
+  // Stats
+  const totalIdentified = prospects.length
+  const inPipeline = prospects.filter(p => p.pipeline_status === 'in_pipeline' || (p.channel >= 1 && p.channel <= 5 && p.pipeline_status !== 'won' && p.pipeline_status !== 'archived')).length
+  const oneWeekAgo = new Date(); oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  const addedThisWeek = prospects.filter(p => p.date_added && new Date(p.date_added) >= oneWeekAgo).length
+  
+  // Filtering and sorting
+  const filteredProspects = prospects.filter(p => {
+    // Tab filter
+    if (tab === 'in_pipeline') {
+      const isInPipeline = p.pipeline_status === 'in_pipeline' || (p.channel >= 1 && p.channel <= 5 && p.pipeline_status !== 'won' && p.pipeline_status !== 'archived')
+      if (!isInPipeline) return false
+    }
+    // Search
+    if (search) {
+      const q = search.toLowerCase()
+      if (!p.name?.toLowerCase().includes(q) && !p.handle?.toLowerCase().includes(q)) return false
+    }
+    // Signal filter
+    if (filterSignal && p.signal_tag !== filterSignal) return false
+    // Status filter
+    if (filterStatus && p.pipeline_status !== filterStatus) return false
+    return true
+  }).sort((a, b) => {
+    let aVal, bVal
+    switch (sortBy) {
+      case 'name': aVal = a.name?.toLowerCase() || ''; bVal = b.name?.toLowerCase() || ''; break
+      case 'date_added': aVal = a.date_added || ''; bVal = b.date_added || ''; break
+      case 'last_updated': aVal = a.last_updated || ''; bVal = b.last_updated || ''; break
+      default: aVal = a.name?.toLowerCase() || ''; bVal = b.name?.toLowerCase() || ''
+    }
+    if (sortDir === 'asc') return aVal < bVal ? -1 : aVal > bVal ? 1 : 0
+    return aVal > bVal ? -1 : aVal < bVal ? 1 : 0
+  })
+  
+  // Format timestamps
+  const fmtRelative = (dateStr) => {
+    if (!dateStr) return '—'
+    const d = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now - d
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffDays < 7) return `${diffDays}d ago`
+    return d.toLocaleDateString()
+  }
+  
+  const fmtFull = (dateStr) => {
+    if (!dateStr) return '—'
+    return new Date(dateStr).toLocaleString('en-US', { 
+      month: 'short', day: 'numeric', year: 'numeric', 
+      hour: 'numeric', minute: '2-digit', hour12: true 
+    })
+  }
+  
+  const getStatusBadge = (p) => {
+    const status = p.pipeline_status || (p.channel >= 1 && p.channel <= 5 ? 'in_pipeline' : 'uncontacted')
+    switch (status) {
+      case 'uncontacted': return { label: 'Uncontacted', bg: '#95A5A6', color: '#fff' }
+      case 'in_pipeline': return { label: 'In Pipeline', bg: C.gold, color: C.black }
+      case 'won': return { label: 'Won', bg: '#27AE60', color: '#fff' }
+      case 'archived': return { label: 'Archived', bg: '#7F8C8D', color: '#fff' }
+      default: return { label: 'Uncontacted', bg: '#95A5A6', color: '#fff' }
+    }
+  }
+  
+  const getSignalBadge = (signalTag) => {
+    const signal = SIGNAL_TAGS.find(s => s.id === signalTag)
+    return signal || null
+  }
+  
+  const getChannelBadge = (channel) => {
+    const ch = CHANNELS.find(c => c.id === channel)
+    return ch ? { label: ch.key, name: ch.name, color: ch.color } : null
+  }
+
+  return (
+    <div style={{padding:'24px 24px 48px', maxWidth: 1200, margin: '0 auto'}} className="fade">
+      {/* Header */}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:24}}>
+        <div>
+          <h1 style={{fontFamily:'Oswald,sans-serif',fontSize:32,color:C.black,fontWeight:700,margin:0}}>Dream 1,000 Clients</h1>
+          <p style={{color:C.muted,fontSize:14,margin:'4px 0 0'}}>Your master list of verified dream clients — identified, tracked, and ready to work.</p>
+        </div>
+        <button onClick={()=>setAddModalOpen(true)} style={{background:C.gold,color:C.black,padding:'12px 20px',borderRadius:10,fontSize:15,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:'pointer',boxShadow:'0 2px 8px rgba(246,189,96,0.4)',display:'flex',alignItems:'center',gap:6}}>
+          + Add to Dream 1,000
+        </button>
+      </div>
+      
+      {/* Stats */}
+      <div style={{display:'flex',gap:12,marginBottom:24}}>
+        <div style={{background:C.card,borderRadius:10,padding:'12px 18px',display:'flex',alignItems:'center',gap:8}}>
+          <span style={{color:C.gold,fontWeight:700,fontSize:20,fontFamily:'Oswald,sans-serif'}}>{totalIdentified}</span>
+          <span style={{color:C.white,fontSize:13}}>Identified</span>
+        </div>
+        <div style={{background:C.card,borderRadius:10,padding:'12px 18px',display:'flex',alignItems:'center',gap:8}}>
+          <span style={{color:C.gold,fontWeight:700,fontSize:20,fontFamily:'Oswald,sans-serif'}}>{inPipeline}</span>
+          <span style={{color:C.white,fontSize:13}}>In Pipeline</span>
+        </div>
+        <div style={{background:C.card,borderRadius:10,padding:'12px 18px',display:'flex',alignItems:'center',gap:8}}>
+          <span style={{color:C.gold,fontWeight:700,fontSize:20,fontFamily:'Oswald,sans-serif'}}>{addedThisWeek}</span>
+          <span style={{color:C.white,fontSize:13}}>This Week</span>
+        </div>
+      </div>
+      
+      {/* Tabs */}
+      <div style={{display:'flex',gap:8,marginBottom:16}}>
+        <button onClick={()=>setTab('identified')} style={{
+          background: tab === 'identified' ? C.gold : 'rgba(255,255,255,0.1)',
+          color: tab === 'identified' ? C.black : C.white,
+          padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+          fontFamily: 'Oswald,sans-serif', border: 'none', cursor: 'pointer',
+          transition: 'all .15s'
+        }}>Identified</button>
+        <button onClick={()=>setTab('in_pipeline')} style={{
+          background: tab === 'in_pipeline' ? C.gold : 'rgba(255,255,255,0.1)',
+          color: tab === 'in_pipeline' ? C.black : C.white,
+          padding: '10px 18px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+          fontFamily: 'Oswald,sans-serif', border: 'none', cursor: 'pointer',
+          transition: 'all .15s'
+        }}>In Pipeline</button>
+      </div>
+      
+      {/* Search and Filters */}
+      <div style={{display:'flex',gap:12,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
+        <input 
+          type="text"
+          placeholder="Search by name or handle..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{background:C.cardInner,border:'2px solid #e0e0e0',borderRadius:10,padding:'10px 14px',fontSize:14,width:250}}
+        />
+        <select 
+          value={filterSignal || ''}
+          onChange={e => setFilterSignal(e.target.value || null)}
+          style={{background:C.cardInner,border:'2px solid #e0e0e0',borderRadius:10,padding:'10px 14px',fontSize:14,cursor:'pointer'}}
+        >
+          <option value="">All Signals</option>
+          {SIGNAL_TAGS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+        </select>
+        {tab === 'identified' && (
+          <select 
+            value={filterStatus || ''}
+            onChange={e => setFilterStatus(e.target.value || null)}
+            style={{background:C.cardInner,border:'2px solid #e0e0e0',borderRadius:10,padding:'10px 14px',fontSize:14,cursor:'pointer'}}
+          >
+            <option value="">All Statuses</option>
+            <option value="uncontacted">Uncontacted</option>
+            <option value="in_pipeline">In Pipeline</option>
+            <option value="won">Won</option>
+            <option value="archived">Archived</option>
+          </select>
+        )}
+        <select 
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value)}
+          style={{background:C.cardInner,border:'2px solid #e0e0e0',borderRadius:10,padding:'10px 14px',fontSize:14,cursor:'pointer'}}
+        >
+          <option value="name">Sort by Name</option>
+          <option value="date_added">Sort by Date Added</option>
+          <option value="last_updated">Sort by Last Updated</option>
+        </select>
+        <button 
+          onClick={()=>setSortDir(d => d === 'asc' ? 'desc' : 'asc')}
+          style={{background:C.cardInner,border:'2px solid #e0e0e0',borderRadius:10,padding:'10px 14px',fontSize:14,cursor:'pointer'}}
+        >
+          {sortDir === 'asc' ? 'A-Z' : 'Z-A'}
+        </button>
+        {(search || filterSignal || filterStatus) && (
+          <button onClick={()=>{setSearch('');setFilterSignal(null);setFilterStatus(null)}} style={{background:'none',border:'none',color:C.muted,fontSize:13,cursor:'pointer',textDecoration:'underline'}}>Clear filters</button>
+        )}
+      </div>
+      
+      {/* Table */}
+      <div style={{background:C.card,borderRadius:14,overflow:'hidden',boxShadow:C.shadow}}>
+        {/* Table Header */}
+        <div style={{display:'grid',gridTemplateColumns:'2fr 1.5fr 1fr 1fr 1fr 1fr 2fr 120px',gap:12,padding:'14px 18px',borderBottom:'1px solid #3a3a3a',fontSize:12,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:'.5px'}}>
+          <div>Name</div>
+          <div>Handle</div>
+          <div>Signal</div>
+          <div>Status</div>
+          {tab === 'in_pipeline' && <div>Channel</div>}
+          {tab !== 'in_pipeline' && <div>Added</div>}
+          <div>Updated</div>
+          <div>Notes</div>
+          <div></div>
+        </div>
+        
+        {/* Table Body */}
+        {filteredProspects.length === 0 ? (
+          <div style={{padding:'40px 18px',textAlign:'center',color:C.muted}}>
+            {search || filterSignal || filterStatus ? 'No prospects match your filters.' : 'No prospects yet. Add your first dream client!'}
+          </div>
+        ) : (
+          filteredProspects.map(p => {
+            const statusBadge = getStatusBadge(p)
+            const signalBadge = getSignalBadge(p.signal_tag)
+            const channelBadge = getChannelBadge(p.channel)
+            const isUncontacted = !p.pipeline_status || p.pipeline_status === 'uncontacted'
+            const pTouches = touches.filter(t => t.prospect_id === p.id)
+            const lastNote = pTouches[0]?.note || p.notes || ''
+            
+            return (
+              <div 
+                key={p.id} 
+                onClick={()=>onOpenDrawer(p.id)}
+                style={{display:'grid',gridTemplateColumns:'2fr 1.5fr 1fr 1fr 1fr 1fr 2fr 120px',gap:12,padding:'14px 18px',borderBottom:'1px solid #3a3a3a',cursor:'pointer',transition:'background .15s',alignItems:'center'}}
+                onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.05)'}
+                onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+              >
+                <div style={{color:C.white,fontWeight:600,fontSize:15,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
+                <div style={{color:C.dim,fontSize:14,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.handle}</div>
+                <div>
+                  {signalBadge && signalBadge.id !== 'none' && (
+                    <span style={{background:signalBadge.color+'22',color:signalBadge.color,padding:'4px 8px',borderRadius:6,fontSize:11,fontWeight:600}}>{signalBadge.label}</span>
+                  )}
+                </div>
+                <div>
+                  <span style={{background:statusBadge.bg,color:statusBadge.color,padding:'4px 8px',borderRadius:6,fontSize:11,fontWeight:600}}>{statusBadge.label}</span>
+                </div>
+                {tab === 'in_pipeline' && (
+                  <div>
+                    {channelBadge && (
+                      <span style={{background:channelBadge.color+'22',color:channelBadge.color,padding:'4px 8px',borderRadius:6,fontSize:11,fontWeight:600}}>{channelBadge.label}</span>
+                    )}
+                  </div>
+                )}
+                {tab !== 'in_pipeline' && (
+                  <div title={fmtFull(p.date_added)} style={{color:C.dim,fontSize:13}}>{fmtRelative(p.date_added)}</div>
+                )}
+                <div title={fmtFull(p.last_updated)} style={{color:C.dim,fontSize:13}}>{fmtRelative(p.last_updated)}</div>
+                <div style={{color:C.muted,fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{lastNote ? lastNote.substring(0, 40) + (lastNote.length > 40 ? '...' : '') : '—'}</div>
+                <div onClick={e=>e.stopPropagation()}>
+                  {isUncontacted && tab === 'identified' && (
+                    <button 
+                      onClick={()=>onActivate(p.id, 1)}
+                      style={{background:C.gold,color:C.black,padding:'6px 12px',borderRadius:6,fontSize:12,fontWeight:600,border:'none',cursor:'pointer',whiteSpace:'nowrap'}}
+                    >
+                      Activate → CH1
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+      
+      {/* Add Modal */}
+      {addModalOpen && (
+        <Dream1000AddModal 
+          onClose={()=>setAddModalOpen(false)}
+          onSubmit={async (data) => {
+            await onAddProspect(data)
+            setAddModalOpen(false)
+          }}
+          userId={userId}
+          sb={sb}
+          onUsageUpdate={onUsageUpdate}
+          onLimitReached={onLimitReached}
+          aiUsage={aiUsage}
+        />
+      )}
+    </div>
+  )
+}
+
+// ─── DREAM 1,000 ADD MODAL ────────────────────────────────────
+function Dream1000AddModal({ onClose, onSubmit, userId, sb, onUsageUpdate, onLimitReached, aiUsage }) {
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [handle, setHandle] = useState('')
+  const [signalTag, setSignalTag] = useState('none')
+  const [notes, setNotes] = useState('')
+  const [activateNow, setActivateNow] = useState(false)
+  const [activateChannel, setActivateChannel] = useState(1)
+  const [saving, setSaving] = useState(false)
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!firstName.trim() || !handle.trim()) return
+    
+    setSaving(true)
+    const fullName = lastName ? `${firstName} ${lastName}` : firstName
+    const formattedHandle = handle.startsWith('@') ? handle : `@${handle}`
+    
+    const prospect = {
+      name: fullName,
+      handle: formattedHandle,
+      signal_tag: signalTag === 'none' ? null : signalTag,
+      notes: notes || null,
+      channel: activateNow ? activateChannel : null,
+      pipeline_status: activateNow ? 'in_pipeline' : 'uncontacted',
+      date_added: new Date().toISOString(),
+      last_updated: new Date().toISOString(),
+      user_id: userId
+    }
+    
+    const { data, error } = await sb.from('prospects').insert(prospect).select().single()
+    setSaving(false)
+    
+    if (error) {
+      alert('Error adding prospect: ' + error.message)
+      return
+    }
+    
+    onSubmit(data)
+  }
+  
+  return (
+    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}} onClick={onClose}>
+      <div style={{background:C.cardInner,borderRadius:16,padding:28,width:'100%',maxWidth:480,boxShadow:'0 20px 60px rgba(0,0,0,0.4)'}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+          <h2 style={{fontFamily:'Oswald,sans-serif',fontSize:22,color:C.black,fontWeight:700,margin:0}}>Add to Dream 1,000</h2>
+          <button onClick={onClose} style={{background:'none',border:'none',fontSize:24,color:C.muted,cursor:'pointer'}}>×</button>
+        </div>
+        
+        <form onSubmit={handleSubmit}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+            <div>
+              <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:600,marginBottom:4,textTransform:'uppercase'}}>First Name *</label>
+              <input 
+                type="text"
+                value={firstName}
+                onChange={e=>setFirstName(e.target.value)}
+                required
+                style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',borderRadius:8,padding:'10px 12px',fontSize:14}}
+              />
+            </div>
+            <div>
+              <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:600,marginBottom:4,textTransform:'uppercase'}}>Last Name</label>
+              <input 
+                type="text"
+                value={lastName}
+                onChange={e=>setLastName(e.target.value)}
+                style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',borderRadius:8,padding:'10px 12px',fontSize:14}}
+              />
+            </div>
+          </div>
+          
+          <div style={{marginBottom:16}}>
+            <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:600,marginBottom:4,textTransform:'uppercase'}}>Instagram Handle *</label>
+            <input 
+              type="text"
+              value={handle}
+              onChange={e=>setHandle(e.target.value)}
+              placeholder="@username"
+              required
+              style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',borderRadius:8,padding:'10px 12px',fontSize:14}}
+            />
+          </div>
+          
+          <div style={{marginBottom:16}}>
+            <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:600,marginBottom:4,textTransform:'uppercase'}}>Signal Tag</label>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              {SIGNAL_TAGS.map(s => (
+                <button 
+                  key={s.id}
+                  type="button"
+                  onClick={()=>setSignalTag(s.id)}
+                  style={{
+                    background: signalTag === s.id ? s.color+'22' : '#f5f5f5',
+                    color: signalTag === s.id ? s.color : C.muted,
+                    border: `2px solid ${signalTag === s.id ? s.color : '#e0e0e0'}`,
+                    padding: '8px 12px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer'
+                  }}
+                >{s.label}</button>
+              ))}
+            </div>
+          </div>
+          
+          <div style={{marginBottom:16}}>
+            <label style={{display:'block',color:C.muted,fontSize:12,fontWeight:600,marginBottom:4,textTransform:'uppercase'}}>Notes</label>
+            <textarea 
+              value={notes}
+              onChange={e=>setNotes(e.target.value)}
+              placeholder="Why are they a dream client? What did you observe?"
+              rows={3}
+              style={{width:'100%',background:'#f5f5f5',border:'2px solid #e0e0e0',borderRadius:8,padding:'10px 12px',fontSize:14,resize:'vertical'}}
+            />
+          </div>
+          
+          <div style={{marginBottom:20,background:'#f9f9f9',borderRadius:10,padding:14}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:activateNow?12:0}}>
+              <input 
+                type="checkbox"
+                id="activateNow"
+                checked={activateNow}
+                onChange={e=>setActivateNow(e.target.checked)}
+                style={{width:18,height:18,cursor:'pointer'}}
+              />
+              <label htmlFor="activateNow" style={{color:C.text,fontSize:14,fontWeight:500,cursor:'pointer'}}>Activate immediately?</label>
+            </div>
+            {activateNow && (
+              <div style={{marginLeft:28}}>
+                <label style={{display:'block',color:C.muted,fontSize:11,marginBottom:6}}>Select starting channel:</label>
+                <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                  {CHANNELS.map(ch => (
+                    <button 
+                      key={ch.id}
+                      type="button"
+                      onClick={()=>setActivateChannel(ch.id)}
+                      style={{
+                        background: activateChannel === ch.id ? ch.color : '#e5e5e5',
+                        color: activateChannel === ch.id ? '#fff' : C.text,
+                        padding: '6px 10px', borderRadius: 6, fontSize: 12, fontWeight: 700,
+                        fontFamily: 'Oswald,sans-serif', border: 'none', cursor: 'pointer'
+                      }}
+                    >{ch.key}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div style={{display:'flex',gap:10}}>
+            <button type="button" onClick={onClose} style={{flex:1,background:'#e5e5e5',color:C.text,padding:'12px',borderRadius:10,fontSize:15,fontWeight:600,border:'none',cursor:'pointer'}}>Cancel</button>
+            <button type="submit" disabled={saving || !firstName.trim() || !handle.trim()} style={{flex:1,background:C.gold,color:C.black,padding:'12px',borderRadius:10,fontSize:15,fontWeight:700,fontFamily:'Oswald,sans-serif',border:'none',cursor:saving?'wait':'pointer',opacity:saving?0.7:1}}>
+              {saving ? 'Adding...' : 'Add to Dream 1,000'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // ─── SETTINGS VIEW ────────────────────────────────────────────
 function SettingsView({sb, profile, coachProfile}) {
   const [data, setData] = useState({
@@ -1065,11 +1514,24 @@ function PipelineApp({sb, profile, coachProfile}) {
   useEffect(()=>{loadAll()},[loadAll])
 
   const addProspect = async (f) => {
+    // If data is already a full prospect object (from Dream 1,000 modal), just add to state
+    if (f.id) {
+      setProspects(p=>[...p,f])
+      const statusMsg = f.pipeline_status === 'in_pipeline' ? ` and activated to ${CHANNELS.find(c=>c.id===f.channel)?.key}` : ''
+      pop(`${f.name} added to Dream 1,000${statusMsg}`)
+      return
+    }
+    
+    // Otherwise, insert new prospect (from old Add modal)
     setSaving(true)
     const {data,error} = await sb.from('prospects').insert({
       user_id:uid, name:f.name.trim(), handle:f.handle.trim(),
       source:f.source||'', notes:f.notes||'',
       channel:+f.channel||3, intent:f.intent||null, added_date:todayStr(),
+      signal_tag: f.signal_tag || null,
+      pipeline_status: f.channel ? 'in_pipeline' : 'uncontacted',
+      date_added: new Date().toISOString(),
+      last_updated: new Date().toISOString(),
     }).select().single()
     setSaving(false)
     if (error) { pop('Error: '+error.message); return }
@@ -1318,7 +1780,12 @@ function PipelineApp({sb, profile, coachProfile}) {
             <button onClick={()=>setAiInfoPopover(!aiInfoPopover)} title="What uses AI calls?" style={{background:'none',border:'none',color:C.dim,fontSize:11,cursor:'pointer',padding:'2px 4px',textDecoration:'underline'}}>?</button>
           </div>
           
-          {['pipeline','daily','guide','settings'].map(v=>(
+          {/* Dream 1,000 - Primary nav item with count badge */}
+            <button onClick={()=>setView('dream1000')} style={{background:view==='dream1000'?C.gold:'rgba(255,255,255,0.1)',color:view==='dream1000'?C.black:C.white,padding:'10px 18px',borderRadius:10,fontSize:15,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:view==='dream1000'?'none':'1px solid rgba(255,255,255,0.2)',cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s',boxShadow:view==='dream1000'?'0 2px 8px rgba(246,189,96,0.4)':'none',display:'flex',alignItems:'center',gap:8}}>
+              Dream 1,000
+              <span style={{background:view==='dream1000'?'rgba(0,0,0,0.15)':'rgba(255,255,255,0.2)',padding:'2px 8px',borderRadius:6,fontSize:12,fontWeight:600}}>{prospects.length}</span>
+            </button>
+            {['pipeline','daily','guide','settings'].map(v=>(
               <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.gold:'rgba(255,255,255,0.1)',color:view===v?C.black:C.white,padding:'10px 18px',borderRadius:10,fontSize:15,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:view===v?'none':'1px solid rgba(255,255,255,0.2)',cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s',boxShadow:view===v?'0 2px 8px rgba(246,189,96,0.4)':'none'}}>
                 {v}
               </button>
@@ -1742,6 +2209,26 @@ OBJECTION HANDLING: Stay curious. Ask questions. Don't push — pull.`}
       {/* SETTINGS */}
       {view==='settings' && (
         <SettingsView sb={sb} profile={profile} coachProfile={coachProfile} />
+      )}
+
+      {/* DREAM 1,000 CLIENTS */}
+      {view==='dream1000' && (
+        <Dream1000View 
+          prospects={prospects}
+          touches={touches}
+          onAddProspect={addProspect}
+          onActivate={async (id, channel = 1) => {
+            await sb.from('prospects').update({ channel, pipeline_status: 'in_pipeline' }).eq('id', id)
+            setProspects(ps => ps.map(p => p.id === id ? { ...p, channel, pipeline_status: 'in_pipeline' } : p))
+            pop('Activated to CH' + channel)
+          }}
+          onOpenDrawer={setDrawerProspectId}
+          userId={uid}
+          sb={sb}
+          onUsageUpdate={handleAiUsageUpdate}
+          onLimitReached={() => setAiLimitModal(true)}
+          aiUsage={aiUsage}
+        />
       )}
 
       {/* DETAIL */}
