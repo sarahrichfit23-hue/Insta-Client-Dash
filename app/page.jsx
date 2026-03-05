@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
+import ProspectDrawer from '@/components/ProspectDrawer'
 
 // ─── BRAND ────────────────────────────────────────────────────
 const C = {
@@ -993,6 +994,8 @@ function PipelineApp({sb, profile, coachProfile}) {
   const [aiLimitModal, setAiLimitModal] = useState(false)
   const [aiScriptsModal, setAiScriptsModal] = useState(false)
   const [aiInfoPopover, setAiInfoPopover] = useState(false)
+  const [drawerProspectId, setDrawerProspectId] = useState(null)
+  const [showArchived, setShowArchived] = useState(false)
   
   const uid = profile.id
   const pop = (msg) => { setToast(msg); setTimeout(()=>setToast(null),2400) }
@@ -1125,6 +1128,28 @@ function PipelineApp({sb, profile, coachProfile}) {
     },{onConflict:'user_id,metric_date'})
   }
 
+  // Mark prospect as won
+  const markAsWon = async (id) => {
+    await sb.from('prospects').update({ status: 'won', won_at: new Date().toISOString() }).eq('id', id)
+    setProspects(ps => ps.map(p => p.id === id ? { ...p, status: 'won', won_at: new Date().toISOString() } : p))
+  }
+
+  // Archive prospect
+  const archiveProspect = async (id, reason) => {
+    await sb.from('prospects').update({ status: 'archived', archived_at: new Date().toISOString(), archived_reason: reason }).eq('id', id)
+    setProspects(ps => ps.map(p => p.id === id ? { ...p, status: 'archived', archived_at: new Date().toISOString(), archived_reason: reason } : p))
+  }
+
+  // Reactivate archived prospect
+  const reactivateProspect = async (id) => {
+    await sb.from('prospects').update({ status: 'active', archived_at: null, archived_reason: null }).eq('id', id)
+    setProspects(ps => ps.map(p => p.id === id ? { ...p, status: 'active', archived_at: null, archived_reason: null } : p))
+    pop('Prospect reactivated')
+  }
+
+  // Drawer prospect
+  const drawerProspect = prospects.find(p => p.id === drawerProspectId)
+
   if (loading) return <Splash>Loading your pipeline...</Splash>
 
   const today    = metrics||{dms:0,replies:0,emails:0,offers:0,sales:0}
@@ -1133,6 +1158,12 @@ function PipelineApp({sb, profile, coachProfile}) {
   const focused  = prospects.find(p=>p.id===focusId)
 
   const visible = prospects.filter(p => {
+    // Filter by status (active vs archived)
+    if (showArchived) {
+      if (p.status !== 'archived') return false
+    } else {
+      if (p.status === 'archived' || p.status === 'won') return false
+    }
     if (filterCh  && p.channel!==filterCh)  return false
     if (filterInt && p.intent!==filterInt)   return false
     if (q && !p.name.toLowerCase().includes(q.toLowerCase()) && !p.handle.toLowerCase().includes(q.toLowerCase())) return false
@@ -1350,7 +1381,8 @@ function PipelineApp({sb, profile, coachProfile}) {
             {INTENT.map(i=>(
               <button key={i.id} onClick={()=>setFilterInt(filterInt===i.id?null:i.id)} style={{background:filterInt===i.id?i.color+'22':C.white,color:filterInt===i.id?i.color:C.dim,border:`2px solid ${filterInt===i.id?i.color:'#d4d4d4'}`,padding:'9px 14px',borderRadius:10,fontSize:18,cursor:'pointer',transition:'all .15s'}}>{i.emoji}</button>
             ))}
-            {(filterCh||filterInt||q)&&<button onClick={()=>{setFilterCh(null);setFilterInt(null);setQ('')}} style={{background:'none',border:'none',color:C.dark,fontSize:15,cursor:'pointer',textDecoration:'underline'}}>Clear</button>}
+            <button onClick={()=>setShowArchived(!showArchived)} style={{background:showArchived?C.dim+'22':C.white,color:showArchived?C.dim:C.muted,border:`2px solid ${showArchived?C.dim:'#d4d4d4'}`,padding:'9px 14px',borderRadius:10,fontSize:14,cursor:'pointer',transition:'all .15s'}}>Archived</button>
+            {(filterCh||filterInt||q||showArchived)&&<button onClick={()=>{setFilterCh(null);setFilterInt(null);setQ('');setShowArchived(false)}} style={{background:'none',border:'none',color:C.dark,fontSize:15,cursor:'pointer',textDecoration:'underline'}}>Clear</button>}
             <span style={{marginLeft:'auto',color:C.dark,fontSize:16,fontWeight:600}}>{visible.length}/{prospects.length}</span>
           </div>
 
@@ -1406,9 +1438,10 @@ function PipelineApp({sb, profile, coachProfile}) {
                       const intentCfg=INTENT.find(i=>i.id===p.intent)
                       const pts=pTouches(p.id)
                       const last=pts.length?pts[pts.length-1]:null
+                      const isArchived = p.status === 'archived'
                       return (
-                        <div key={p.id} onClick={()=>{setFocusId(p.id);setView('detail')}}
-                          style={{background:C.cardInner,borderRadius:10,padding:'12px 14px',cursor:'pointer',transition:'all .15s',margin:'0 0 2px',boxShadow:'0 1px 4px rgba(0,0,0,0.1)'}}
+                        <div key={p.id} onClick={()=>setDrawerProspectId(p.id)}
+                          style={{background:isArchived?'#f0f0f0':C.cardInner,borderRadius:10,padding:'12px 14px',cursor:'pointer',transition:'all .15s',margin:'0 0 2px',boxShadow:'0 1px 4px rgba(0,0,0,0.1)',opacity:isArchived?0.7:1}}
                           onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 6px 16px rgba(0,0,0,0.2)'}}
                           onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,0.1)'}}>
                           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:5}}>
@@ -1419,25 +1452,34 @@ function PipelineApp({sb, profile, coachProfile}) {
                             {intentCfg&&<span style={{fontSize:18,marginLeft:2}}>{intentCfg.emoji}</span>}
                           </div>
                           {last&&<div style={{color:C.muted,fontSize:14,marginBottom:5,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{last.touch_type} · {fmtDate(last.touch_date)}</div>}
-                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                            <span style={{color:C.muted,fontSize:14}}>{pts.length} touches</span>
-                            <div style={{display:'flex',gap:4}}>
-                              {ch.id>1&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id-1)}} style={{background:'#f0f0f0',color:C.text,width:28,height:28,borderRadius:8,fontSize:15,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>←</button>}
-                              {ch.id<5&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id+1)}} style={{background:ch.color+'22',color:ch.color,width:28,height:28,borderRadius:8,fontSize:15,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>→</button>}
-                              <button onClick={e=>{e.stopPropagation();setTouchFor(p.id)}} style={{background:C.gold,color:C.black,width:28,height:28,borderRadius:8,fontSize:17,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(232,185,49,0.3)'}}>+</button>
+                          {isArchived ? (
+                            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                              <span style={{color:C.dim,fontSize:13,fontStyle:'italic'}}>{p.archived_reason === 'not_fit' ? 'Not a fit' : p.archived_reason === 'bad_timing' ? 'Bad timing' : p.archived_reason === 'no_response' ? 'No response' : 'Archived'}</span>
+                              <button onClick={e=>{e.stopPropagation();reactivateProspect(p.id)}} style={{background:C.gold,color:C.black,padding:'6px 12px',borderRadius:6,fontSize:12,fontWeight:600,border:'none',cursor:'pointer'}}>Reactivate</button>
                             </div>
-                          </div>
-                          {/* AI suggestion text link - demoted, only appears after touch info */}
-                          <div style={{marginTop:8,paddingTop:6,borderTop:'1px solid #f0f0f0'}}>
-                            <span 
-                              onClick={e=>{e.stopPropagation();setAiFor({id:p.id,channel:ch.id})}} 
-                              style={{color:C.dim,fontSize:12,cursor:'pointer',transition:'color .15s'}}
-                              onMouseEnter={e=>e.currentTarget.style.color=C.gold}
-                              onMouseLeave={e=>e.currentTarget.style.color=C.dim}
-                            >
-                              {"Need a next move? → Ask Coach Sarah AI"}
-                            </span>
-                          </div>
+                          ) : (
+                            <>
+                              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                                <span style={{color:C.muted,fontSize:14}}>{pts.length} touches</span>
+                                <div style={{display:'flex',gap:4}}>
+                                  {ch.id>1&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id-1)}} style={{background:'#f0f0f0',color:C.text,width:28,height:28,borderRadius:8,fontSize:15,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>←</button>}
+                                  {ch.id<5&&<button onClick={e=>{e.stopPropagation();moveProspect(p.id,ch.id+1)}} style={{background:ch.color+'22',color:ch.color,width:28,height:28,borderRadius:8,fontSize:15,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>→</button>}
+                                  <button onClick={e=>{e.stopPropagation();setTouchFor(p.id)}} style={{background:C.gold,color:C.black,width:28,height:28,borderRadius:8,fontSize:17,fontWeight:700,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 6px rgba(232,185,49,0.3)'}}>+</button>
+                                </div>
+                              </div>
+                              {/* AI suggestion text link - demoted, only appears after touch info */}
+                              <div style={{marginTop:8,paddingTop:6,borderTop:'1px solid #f0f0f0'}}>
+                                <span 
+                                  onClick={e=>{e.stopPropagation();setAiFor({id:p.id,channel:ch.id})}} 
+                                  style={{color:C.dim,fontSize:12,cursor:'pointer',transition:'color .15s'}}
+                                  onMouseEnter={e=>e.currentTarget.style.color=C.gold}
+                                  onMouseLeave={e=>e.currentTarget.style.color=C.dim}
+                                >
+                                  {"Need a next move? → Ask Coach Sarah AI"}
+                                </span>
+                              </div>
+                            </>
+                          )}
                         </div>
                       )
                     })}
@@ -1790,7 +1832,26 @@ OBJECTION HANDLING: Stay curious. Ask questions. Don't push — pull.`}
 
       {addOpen&&<Overlay onClose={()=>setAddOpen(false)}><AddForm onSubmit={addProspect} onCancel={()=>setAddOpen(false)} saving={saving} userId={uid} onUsageUpdate={handleAiUsageUpdate} onLimitReached={()=>setAiLimitModal(true)} aiUsage={aiUsage}/></Overlay>}
       {touchFor&&<Overlay onClose={()=>setTouchFor(null)}><TouchForm prospect={prospects.find(p=>p.id===touchFor)} onSubmit={(type,note)=>logTouch(touchFor,type,note)} onCancel={()=>setTouchFor(null)}/></Overlay>}
-      {aiFor&&<Overlay onClose={()=>setAiFor(null)}><AISuggestionForm prospect={prospects.find(p=>p.id===aiFor.id)} channel={aiFor.channel} onClose={()=>setAiFor(null)} userId={uid} onUsageUpdate={handleAiUsageUpdate} onLimitReached={()=>{setAiFor(null);setAiLimitModal(true)}} aiUsage={aiUsage}/></Overlay>}
+      {aiFor&&<Overlay onClose={()=>setAiFor(null)}><AISuggestionForm prospect={prospects.find(p=>p.id===aiFor.id)} channel={aiFor.channel} onClose={()=>setAiFor(null)} userId={uid} onUsageUpdate={handleAiUsageUpdate} onLimitReached={()=>{setAiFor(null);setAiLimitModal(true)}} aiUsage={aiUsage} prefill={aiFor.prefill || ''}/></Overlay>}
+      
+      {/* Prospect Drawer */}
+      {drawerProspectId && drawerProspect && (
+        <ProspectDrawer
+          prospect={drawerProspect}
+          touches={pTouches(drawerProspectId)}
+          onClose={() => setDrawerProspectId(null)}
+          onMoveChannel={(id, ch) => { moveProspect(id, ch) }}
+          onLogTouch={(id, text, type) => logTouch(id, type || 'Conversation', text)}
+          onUpdateProspect={(id, fields) => patchProspect(id, fields)}
+          onOpenAI={(id, ch, prefill) => { setDrawerProspectId(null); setAiFor({ id, channel: ch, prefill }) }}
+          onWon={markAsWon}
+          onArchive={archiveProspect}
+          userId={uid}
+          sb={sb}
+          dailyMetrics={metrics}
+          onUpdateMetrics={setMetrics}
+        />
+      )}
     </div>
   )
 }
@@ -2144,8 +2205,8 @@ function TouchForm({prospect,onSubmit,onCancel}) {
   )
 }
 
-function AISuggestionForm({prospect, channel, onClose, userId, onUsageUpdate, onLimitReached, aiUsage}) {
-  const [convoText, setConvoText] = useState('')
+function AISuggestionForm({prospect, channel, onClose, userId, onUsageUpdate, onLimitReached, aiUsage, prefill = ''}) {
+  const [convoText, setConvoText] = useState(prefill)
   const [selChannel, setSelChannel] = useState(channel || 1)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
