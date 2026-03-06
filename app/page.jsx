@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import ProspectDrawer from '@/components/ProspectDrawer'
+import PerformanceHistory from '@/components/PerformanceHistory'
 
 // ─── BRAND ────────────────────────────────────────────────────
 const C = {
@@ -1118,7 +1119,7 @@ function Dream1000AddModal({ onClose, onSubmit, userId, sb, onUsageUpdate, onLim
   )
 }
 
-// ─── SETTINGS VIEW ───────────────────────────────────────�������────
+// ─── SETTINGS VIEW ──────────��────────────────────────────�������────
 function SettingsView({sb, profile, coachProfile}) {
   const [data, setData] = useState({
     niche_who: coachProfile?.niche_who || '',
@@ -1450,6 +1451,7 @@ function PipelineApp({sb, profile, coachProfile}) {
   const [prospects, setProspects] = useState([])
   const [touches,   setTouches]   = useState([])
   const [metrics,   setMetrics]   = useState(null)
+  const [metricsHistory, setMetricsHistory] = useState([])
   const [loading,   setLoading]   = useState(true)
   const [view,      setView]      = useState('pipeline')
   const [focusId,   setFocusId]   = useState(null)
@@ -1530,14 +1532,21 @@ function PipelineApp({sb, profile, coachProfile}) {
 
   const loadAll = useCallback(async () => {
     setLoading(true)
-    const [{data:pros},{data:tchs},{data:met}] = await Promise.all([
+    // Fetch 6 weeks of history for Performance History
+    const sixWeeksAgo = new Date()
+    sixWeeksAgo.setDate(sixWeeksAgo.getDate() - 42)
+    const historyStart = sixWeeksAgo.toISOString().slice(0, 10)
+    
+    const [{data:pros},{data:tchs},{data:met},{data:history}] = await Promise.all([
       sb.from('prospects').select('*').eq('user_id',uid).order('created_at'),
       sb.from('touches').select('*').eq('user_id',uid).order('touch_date'),
       sb.from('daily_metrics').select('*').eq('user_id',uid).eq('metric_date',todayStr()).single(),
+      sb.from('daily_metrics').select('*').eq('user_id',uid).gte('metric_date', historyStart).order('metric_date', { ascending: false }),
     ])
     setProspects(pros||[])
     setTouches(tchs||[])
     setMetrics(met||{dms:0,replies:0,emails:0,offers:0,sales:0})
+    setMetricsHistory(history||[])
     setLoading(false)
   },[sb,uid])
 
@@ -2063,6 +2072,14 @@ function PipelineApp({sb, profile, coachProfile}) {
               </div>
             ))}
           </div>
+
+          {/* Performance History */}
+          <PerformanceHistory 
+            metricsHistory={metricsHistory}
+            userId={uid}
+            sb={sb}
+            onUsageUpdate={handleAiUsageUpdate}
+          />
         </div>
       )}
 
