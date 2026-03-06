@@ -2,11 +2,16 @@ import { createClient } from '@supabase/supabase-js'
 import { streamText } from 'ai'
 import { gateway } from '@ai-sdk/gateway'
 
+// Force dynamic to prevent static analysis during build
+export const dynamic = 'force-dynamic'
+
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  )
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) {
+    throw new Error('Supabase not configured')
+  }
+  return createClient(url, key)
 }
 
 const SYSTEM_PROMPT = `You are Coach Sarah AI analyzing a health coach's weekly performance data from the Insta Client Engine pipeline system.
