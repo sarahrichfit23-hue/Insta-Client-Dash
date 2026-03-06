@@ -170,14 +170,44 @@ export default function App() {
       if (!s) setProfile(null)
     })
     
+    // Auto-logout when user closes the tab/browser for security
     const handleBeforeUnload = () => {
+      // Clear the session from localStorage immediately (synchronous)
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      if (supabaseUrl) {
+        const projectRef = supabaseUrl.match(/https:\/\/([^.]+)/)?.[1]
+        if (projectRef) {
+          localStorage.removeItem(`sb-${projectRef}-auth-token`)
+        }
+      }
+      // Also attempt signOut (may not complete before page unloads, but localStorage is already cleared)
       sb.auth.signOut()
     }
+    
+    // Also handle visibility change for when user switches away and closes
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // Mark session for cleanup - will be invalidated on next load if tab was closed
+        sessionStorage.setItem('ice-session-active', 'false')
+      } else {
+        sessionStorage.setItem('ice-session-active', 'true')
+      }
+    }
+    
+    // Check if session was abandoned (tab closed while hidden)
+    const wasAbandoned = sessionStorage.getItem('ice-session-active') === 'false'
+    if (wasAbandoned) {
+      sb.auth.signOut()
+    }
+    sessionStorage.setItem('ice-session-active', 'true')
+    
     window.addEventListener('beforeunload', handleBeforeUnload)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
     
     return () => {
       subscription.unsubscribe()
       window.removeEventListener('beforeunload', handleBeforeUnload)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [sb])
 
@@ -1088,7 +1118,7 @@ function Dream1000AddModal({ onClose, onSubmit, userId, sb, onUsageUpdate, onLim
   )
 }
 
-// ─── SETTINGS VIEW ───────────────────────────────────────�����────
+// ─── SETTINGS VIEW ───────────────────────────────────────�������────
 function SettingsView({sb, profile, coachProfile}) {
   const [data, setData] = useState({
     niche_who: coachProfile?.niche_who || '',
