@@ -952,7 +952,7 @@ function Dream1000AddModal({ onClose, onSubmit, userId, sb, onUsageUpdate, onLim
       handle: formattedHandle,
       signal_tag: signalTag === 'none' ? null : signalTag,
       notes: notes || null,
-      channel: activateNow ? activateChannel : null,
+      channel: activateNow ? activateChannel : 0,
       pipeline_status: activateNow ? 'in_pipeline' : 'uncontacted',
       date_added: new Date().toISOString(),
       last_updated: new Date().toISOString(),
@@ -1088,7 +1088,7 @@ function Dream1000AddModal({ onClose, onSubmit, userId, sb, onUsageUpdate, onLim
   )
 }
 
-// ─── SETTINGS VIEW ────────────────────────────────────────────
+// ─── SETTINGS VIEW ───────────────────────────────────────���────
 function SettingsView({sb, profile, coachProfile}) {
   const [data, setData] = useState({
     niche_who: coachProfile?.niche_who || '',
