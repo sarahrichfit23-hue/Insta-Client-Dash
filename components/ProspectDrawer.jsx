@@ -23,12 +23,154 @@ const INTENT = [
   { id:'cold', emoji:'❄️', label:'Cold', color:C.blue },
 ]
 
-const CHANNEL_ACTIONS = {
-  1: "Your move: Send welcome DM within 24–48hrs of their follow. Reference something specific from their profile above. Goal is one reply — nothing more.",
-  2: "Your move: Add value. Reference something they said last time. Ask one question that goes one level deeper. Do not mention your offer yet.",
-  3: "Your move: This person needs CH4 engagement first. Like 2–3 posts, leave one genuine comment, react to a story. Come back in 3–5 days for the Curiosity Opener.",
-  4: "Your move: Engage their content today — like, comment, react. No DM yet. After 3–5 touches move them to CH3 and send your Curiosity Opener.",
-  5: "Your move: Diagnose → position → soft offer. Use their exact words from your notes. Reference their stated problem. Make the offer feel like the obvious next step.",
+// Dynamic recommendation logic based on channel, last activity, and touch count
+function getRecommendedAction(channel, touchCount, notes) {
+  const lastNote = notes?.[0]?.note_text?.toLowerCase() || ''
+  const hasWelcomeDm = notes.some(n => n.note_text?.toLowerCase().includes('welcome dm'))
+  const hasReply = notes.some(n => {
+    const text = n.note_text?.toLowerCase() || ''
+    return text.includes('replied') || text.includes('they said') || text.includes('she said') || 
+           text.includes('he said') || text.includes('got a reply') || text.includes('responded') || 
+           text.includes('messaged back')
+  })
+  const hasCuriosityOpener = notes.some(n => {
+    const text = n.note_text?.toLowerCase() || ''
+    return text.includes('curiosity opener') || text.includes('dm sent') || text.includes('opener sent')
+  })
+  
+  switch (channel) {
+    case 1: // New Arrivals
+      if (touchCount === 0 && !hasWelcomeDm) {
+        return "Your move: Send your welcome DM within 24–48hrs. Reference something specific from their profile in the Intel tab. Goal: one reply — nothing more."
+      }
+      if (hasWelcomeDm && touchCount === 1) {
+        return "Your move: Welcome DM sent — now wait for their reply. While you wait, engage their content (like a post, react to a story). Do NOT send another DM yet."
+      }
+      if (touchCount >= 2 && !hasReply) {
+        return "Your move: No reply yet — don't chase. Engage their content for 2–3 more days then consider moving them to CH4 to warm up before trying again."
+      }
+      if (hasReply) {
+        return "Your move: They replied — move them to CH2 now. They're a warm conversation. ← Use the Move Channel button below."
+      }
+      return "Your move: Send your welcome DM within 24–48hrs. Reference something specific from their profile. Goal: one reply."
+      
+    case 2: // Warm Conversations
+      if (touchCount <= 3) {
+        return "Your move: Early stage — keep adding value. Ask one question that goes deeper into their situation. No positioning yet. Just be genuinely curious about them."
+      }
+      if (touchCount >= 4 && touchCount <= 7) {
+        return "Your move: Relationship is building. Start soft positioning — reference something they've shared and naturally mention your expertise. Don't pitch. Plant seeds."
+      }
+      if (touchCount >= 8) {
+        return "Your move: This relationship is warm enough. If they've shown any interest signals, consider moving them to CH5 for a soft offer conversation."
+      }
+      return "Your move: Add value. Reference something they said. Ask one question that goes deeper. Do not mention your offer yet."
+      
+    case 3: // Cold Activation
+      if (touchCount === 0) {
+        return "Your move: Don't DM yet. This person needs CH4 engagement first — move them there and warm up their radar for 3–5 days before sending anything."
+      }
+      if (hasCuriosityOpener) {
+        return "Your move: Opener sent — now wait 48hrs. If no reply, engage their content and try a different angle. If they reply, move to CH2 immediately."
+      }
+      return "Your move: Send your Curiosity Opener. Reference something SPECIFIC from their profile. One question. Max 2 sentences."
+      
+    case 4: // Warm-Up Engagement
+      if (touchCount < 3) {
+        return "Your move: Keep engaging their content — like posts, leave one genuine comment, react to stories. No DM yet. You need 3–5 touches before they know your face."
+      }
+      if (touchCount >= 3 && touchCount < 5) {
+        return "Your move: Almost ready — one or two more genuine content engagements and then move them to CH3 for your Curiosity Opener."
+      }
+      if (touchCount >= 5) {
+        return "Your move: They know your face now. Move them to CH3 and send your Curiosity Opener today. Don't over-warm — timing matters."
+      }
+      return "Your move: Engage their content today — like, comment, react. No DM yet."
+      
+    case 5: // Conversion Touches
+      if (touchCount <= 2) {
+        return "Your move: Diagnose first — ask about their specific situation using their own words from your notes. Don't offer anything yet. Understand before you position."
+      }
+      if (touchCount >= 3 && touchCount <= 5) {
+        return "Your move: You have enough context now. Make your soft offer — reference their exact problem, bridge to your program, make it optional. 'Would it be weird if I told you more about how this works?'"
+      }
+      if (touchCount >= 6) {
+        return "Your move: If they're still here after 6 touches with no close, there's an objection that hasn't surfaced yet. Ask directly: 'What's holding you back from moving forward?' Then listen."
+      }
+      return "Your move: Diagnose → position → soft offer. Use their exact words from your notes."
+      
+    default:
+      return "Your move: Review their profile and determine the best next step."
+  }
+}
+
+// Smart prompt detection
+function detectSmartPrompts(noteText) {
+  const text = noteText?.toLowerCase() || ''
+  const prompts = []
+  
+  // Reply detection for CH2 move
+  if (text.includes('replied') || text.includes('they said') || text.includes('she said') || 
+      text.includes('he said') || text.includes('got a reply') || text.includes('responded') || 
+      text.includes('messaged back')) {
+    prompts.push({ type: 'move_ch2', message: "Looks like they replied — ready to move them to CH2?" })
+  }
+  
+  // Win detection
+  if (text.includes('said yes') || text.includes('wants to sign up') || text.includes('ready to start') || 
+      text.includes('booked a call') || text.includes('signed up') || text.includes('paid') ||
+      text.includes('enrolled') || text.includes('committed')) {
+    prompts.push({ type: 'mark_won', message: "Sounds like a win — ready to mark them as Won?" })
+  }
+  
+  return prompts
+}
+
+// Smart Prompt inline component
+function SmartPrompt({ prompt, prospect, onMoveChannel, onWon }) {
+  const [dismissed, setDismissed] = useState(false)
+  
+  if (dismissed) return null
+  
+  // Don't show CH2 prompt if already in CH2+
+  if (prompt.type === 'move_ch2' && prospect.channel >= 2) return null
+  
+  // Don't show won prompt if already won
+  if (prompt.type === 'mark_won' && prospect.status === 'won') return null
+  
+  return (
+    <div style={{
+      background: '#333',
+      borderLeft: `3px solid ${C.gold}`,
+      borderRadius: '0 6px 6px 0',
+      padding: '10px 12px',
+      marginTop: 6,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10
+    }}>
+      <span style={{ color: C.dim, fontSize: 12, flex: 1 }}>{prompt.message}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {prompt.type === 'move_ch2' && (
+          <button 
+            onClick={() => { onMoveChannel(2); setDismissed(true); }}
+            style={{ background: C.gold, color: C.black, border: 'none', padding: '6px 10px', borderRadius: 4, fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >Move to CH2 →</button>
+        )}
+        {prompt.type === 'mark_won' && (
+          <button 
+            onClick={() => { onWon(); setDismissed(true); }}
+            style={{ background: C.green, color: '#fff', border: 'none', padding: '6px 10px', borderRadius: 4, fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >Mark as Won 🎉</button>
+        )}
+        <button 
+          onClick={() => setDismissed(true)}
+          style={{ background: 'transparent', border: 'none', color: C.muted, fontSize: 14, cursor: 'pointer', padding: '2px 4px' }}
+        >×</button>
+      </div>
+    </div>
+  )
 }
 
 const ARCHIVE_REASONS = [
@@ -119,6 +261,7 @@ export default function ProspectDrawer({
     if (!noteText.trim() || !sb) return
     setSaving(true)
     
+    // Insert the note into prospect_notes
     const { data: newNote } = await sb.from('prospect_notes').insert({
       prospect_id: p.id,
       user_id: userId,
@@ -131,9 +274,15 @@ export default function ProspectDrawer({
       setNotes(prev => [newNote, ...prev])
     }
     
-    // Increment touch if logging a touch
+    // If logging a touch, also insert into touches table and update last_contacted_at
+    // (but NOT into prospect_notes again since we just did that above)
     if (incrementTouch) {
-      onLogTouch?.(p.id, noteText.trim(), type)
+      // Insert into touches table for touch count tracking
+      const touch = { prospect_id: p.id, user_id: userId, touch_type: type, note: noteText.trim(), touch_date: new Date().toISOString().slice(0, 10) }
+      await sb.from('touches').insert(touch)
+      
+      // Update last_contacted_at
+      await sb.from('prospects').update({ last_contacted_at: new Date().toISOString() }).eq('id', p.id)
     }
     
     // Update daily DM counter if checked
@@ -147,11 +296,12 @@ export default function ProspectDrawer({
     setSaving(false)
   }
 
-  // Quick touch (no note)
+  // Quick touch (no note) - uses the unified logTouch which handles both tables
   const quickTouch = async () => {
     setSaving(true)
     await onLogTouch?.(p.id, 'Quick touch logged', 'conversation')
-    await sb?.from('prospects').update({ last_contacted_at: new Date().toISOString() }).eq('id', p.id)
+    // Refresh notes to show the new touch in activity feed
+    await fetchData()
     showSaved()
     setSaving(false)
   }
@@ -355,7 +505,7 @@ export default function ProspectDrawer({
               <div>
                 <div style={{color:C.gold,fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:10}}>Next Recommended Action</div>
                 <div style={{background:'#242424',borderLeft:`3px solid ${C.gold}`,borderRadius:'0 8px 8px 0',padding:14}}>
-                  <div style={{color:C.white,fontSize:14,lineHeight:1.6}}>{CHANNEL_ACTIONS[p.channel]}</div>
+                  <div style={{color:C.white,fontSize:14,lineHeight:1.6}}>{getRecommendedAction(p.channel, touchCount, notes)}</div>
                 </div>
               </div>
             </>
@@ -405,32 +555,48 @@ export default function ProspectDrawer({
                     // Count conversation touches
                     const touchNum = isConvo ? notes.filter((n, i) => n.note_type === 'conversation' && i >= idx).length : null
                     
+                    // Get smart prompts for this note
+                    const smartPrompts = detectSmartPrompts(note.note_text)
+                    
                     return (
-                      <div key={note.id} style={{
-                        background: isMove ? 'transparent' : '#242424',
-                        borderRadius: isMove ? 0 : 8,
-                        padding: isMove ? '4px 0' : 12,
-                        borderLeft: isMove ? 'none' : isAI ? `2px solid ${C.gold}` : 'none'
-                      }}>
-                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:isMove?0:4}}>
-                          <div style={{display:'flex',alignItems:'center',gap:6}}>
-                            {isObservation && <span style={{fontSize:12}}>👁</span>}
-                            {isAI && <span style={{color:C.gold,fontSize:11,fontWeight:600}}>✦ AI Script</span>}
-                            {isMove && <span style={{color:C.dim,fontSize:12}}>→</span>}
-                            {isConvo && noteCh && <span style={{background:noteCh.color+'22',color:noteCh.color,padding:'2px 6px',borderRadius:4,fontSize:10,fontWeight:700}}>{noteCh.key}</span>}
-                            {isConvo && touchNum && <span style={{color:C.muted,fontSize:11}}>Touch #{touchNum}</span>}
-                          </div>
-                          <span style={{color:C.dim,fontSize:11}}>{new Date(note.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric' })}</span>
-                        </div>
+                      <div key={note.id}>
                         <div style={{
-                          color: isAI ? C.gold : isObservation ? C.muted : isMove ? C.dim : C.white,
-                          fontSize: isMove ? 12 : 13,
-                          fontStyle: isMove ? 'italic' : 'normal',
-                          lineHeight: 1.5
-                        }}>{note.note_text}</div>
-                        {isAI && (
-                          <button onClick={() => navigator.clipboard.writeText(note.note_text)} style={{marginTop:8,background:C.gold,color:C.black,border:'none',padding:'4px 10px',borderRadius:4,fontSize:11,fontWeight:600,cursor:'pointer'}}>Copy</button>
-                        )}
+                          background: isMove ? 'transparent' : '#242424',
+                          borderRadius: isMove ? 0 : 8,
+                          padding: isMove ? '4px 0' : 12,
+                          borderLeft: isMove ? 'none' : isAI ? `2px solid ${C.gold}` : 'none'
+                        }}>
+                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:isMove?0:4}}>
+                            <div style={{display:'flex',alignItems:'center',gap:6}}>
+                              {isObservation && <span style={{fontSize:12}}>👁</span>}
+                              {isAI && <span style={{color:C.gold,fontSize:11,fontWeight:600}}>✦ AI Script</span>}
+                              {isMove && <span style={{color:C.dim,fontSize:12}}>→</span>}
+                              {isConvo && noteCh && <span style={{background:noteCh.color+'22',color:noteCh.color,padding:'2px 6px',borderRadius:4,fontSize:10,fontWeight:700}}>{noteCh.key}</span>}
+                              {isConvo && touchNum && <span style={{color:C.muted,fontSize:11}}>Touch #{touchNum}</span>}
+                            </div>
+                            <span style={{color:C.dim,fontSize:11}}>{new Date(note.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric' })}</span>
+                          </div>
+                          <div style={{
+                            color: isAI ? C.gold : isObservation ? C.muted : isMove ? C.dim : C.white,
+                            fontSize: isMove ? 12 : 13,
+                            fontStyle: isMove ? 'italic' : 'normal',
+                            lineHeight: 1.5
+                          }}>{note.note_text}</div>
+                          {isAI && (
+                            <button onClick={() => navigator.clipboard.writeText(note.note_text)} style={{marginTop:8,background:C.gold,color:C.black,border:'none',padding:'4px 10px',borderRadius:4,fontSize:11,fontWeight:600,cursor:'pointer'}}>Copy</button>
+                          )}
+                        </div>
+                        
+                        {/* Smart Prompts */}
+                        {smartPrompts.map((prompt, pIdx) => (
+                          <SmartPrompt 
+                            key={`${note.id}-prompt-${pIdx}`}
+                            prompt={prompt}
+                            prospect={p}
+                            onMoveChannel={handleMoveChannel}
+                            onWon={handleWon}
+                          />
+                        ))}
                       </div>
                     )
                   })}

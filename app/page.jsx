@@ -1088,7 +1088,7 @@ function Dream1000AddModal({ onClose, onSubmit, userId, sb, onUsageUpdate, onLim
   )
 }
 
-// ─── SETTINGS VIEW ───────────────────────────────────────���────
+// ─── SETTINGS VIEW ───────────────────────────────────────�����────
 function SettingsView({sb, profile, coachProfile}) {
   const [data, setData] = useState({
     niche_who: coachProfile?.niche_who || '',
@@ -1562,10 +1562,29 @@ function PipelineApp({sb, profile, coachProfile}) {
   }
 
   const logTouch = async (id, type, note) => {
+    const prospect = prospects.find(p => p.id === id)
+    const now = new Date().toISOString()
+    
+    // 1. Insert into touches table (for touch count tracking)
     const touch = {prospect_id:id,user_id:uid,touch_type:type,note:note||'',touch_date:todayStr()}
     const {data,error} = await sb.from('touches').insert(touch).select().single()
     if (error) { pop('Error saving touch'); return }
     setTouches(ts=>[...ts,data])
+    
+    // 2. Also insert into prospect_notes for unified Activity feed
+    const noteText = note || `Touch logged: ${type}`
+    await sb.from('prospect_notes').insert({
+      prospect_id: id,
+      user_id: uid,
+      note_text: noteText,
+      note_type: 'conversation',
+      channel_at_time: prospect?.channel || 1
+    })
+    
+    // 3. Update last_contacted_at on the prospect
+    await sb.from('prospects').update({ last_contacted_at: now }).eq('id', id)
+    setProspects(ps => ps.map(p => p.id === id ? { ...p, last_contacted_at: now } : p))
+    
     pop('Touch logged')
     setTouchFor(null)
   }
