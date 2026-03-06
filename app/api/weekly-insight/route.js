@@ -2,10 +2,12 @@ import { createClient } from '@supabase/supabase-js'
 import { streamText } from 'ai'
 import { gateway } from '@ai-sdk/gateway'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+}
 
 const SYSTEM_PROMPT = `You are Coach Sarah AI analyzing a health coach's weekly performance data from the Insta Client Engine pipeline system.
 
@@ -35,6 +37,9 @@ export async function POST(req) {
     if (!userId) {
       return Response.json({ error: 'User ID required' }, { status: 400 })
     }
+
+    // Initialize Supabase inside the handler (not at module level)
+    const supabase = getSupabase()
 
     // Check AI usage first
     const { data: usageData } = await supabase.rpc('check_and_reset_ai_usage', { p_user_id: userId })
