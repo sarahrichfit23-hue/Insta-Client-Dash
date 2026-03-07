@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import ProspectDrawer from '@/components/ProspectDrawer'
 import PerformanceHistory from '@/components/PerformanceHistory'
-import Playbook from '@/components/Playbook'
 
 // ─── BRAND ────────────────────────────────────────────────────
 const C = {
@@ -1455,8 +1454,6 @@ function PipelineApp({sb, profile, coachProfile}) {
   const [metricsHistory, setMetricsHistory] = useState([])
   const [loading,   setLoading]   = useState(true)
   const [view,      setView]      = useState('pipeline')
-  const [playbookSection, setPlaybookSection] = useState(null)
-  const [playbookAnchor, setPlaybookAnchor] = useState(null)
   const [focusId,   setFocusId]   = useState(null)
   const [addOpen,   setAddOpen]   = useState(false)
   const [touchFor,  setTouchFor]  = useState(null)
@@ -1483,13 +1480,6 @@ function PipelineApp({sb, profile, coachProfile}) {
   
   const uid = profile.id
   const pop = (msg) => { setToast(msg); setTimeout(()=>setToast(null),2400) }
-  
-  // Navigate to playbook section (for tooltips)
-  const navigateToPlaybook = (section, anchor) => {
-    setPlaybookSection(section)
-    setPlaybookAnchor(anchor)
-    setView('playbook')
-  }
 
   // Check localStorage for welcome banner dismissal
   useEffect(() => {
@@ -1853,7 +1843,7 @@ function PipelineApp({sb, profile, coachProfile}) {
               Dream 1,000
               <span style={{background:view==='dream1000'?'rgba(0,0,0,0.15)':'rgba(255,255,255,0.2)',padding:'2px 8px',borderRadius:6,fontSize:12,fontWeight:600}}>{prospects.length}</span>
             </button>
-            {['pipeline','daily','guide','playbook','settings'].map(v=>(
+            {['pipeline','daily','guide','settings'].map(v=>(
               <button key={v} onClick={()=>setView(v)} style={{background:view===v?C.gold:'rgba(255,255,255,0.1)',color:view===v?C.black:C.white,padding:'10px 18px',borderRadius:10,fontSize:15,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',border:view===v?'none':'1px solid rgba(255,255,255,0.2)',cursor:'pointer',fontFamily:'Oswald,sans-serif',transition:'all .15s',boxShadow:view===v?'0 2px 8px rgba(246,189,96,0.4)':'none'}}>
                 {v}
               </button>
@@ -2280,14 +2270,6 @@ OBJECTION HANDLING: Stay curious. Ask questions. Don't push — pull.`}
             </div>
           </div>
         </div>
-      )}
-
-      {/* PLAYBOOK */}
-      {view==='playbook' && (
-        <Playbook 
-          initialSection={playbookSection}
-          initialAnchor={playbookAnchor}
-        />
       )}
 
       {/* SETTINGS */}
