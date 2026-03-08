@@ -180,6 +180,555 @@ const ARCHIVE_REASONS = [
   { id: 'other', label: 'Other' },
 ]
 
+// ─── SITUATION TILES ──────────────────────────────────────────
+const SITUATIONS = [
+  { id: 'just_followed', emoji: '📩', label: 'They just followed me', channels: [1] },
+  { id: 'replied_opener', emoji: '💬', label: 'They replied to my opener', channels: [1, 2, 3] },
+  { id: 'really_interested', emoji: '🔥', label: 'They seem really interested', channels: [2, 5] },
+  { id: 'cold_reply', emoji: '🧊', label: 'They gave a cold/one-word reply', channels: [1, 2, 3] },
+  { id: 'ghosted', emoji: '👻', label: 'They went quiet / ghosted', channels: [2, 3, 5] },
+  { id: 'need_to_think', emoji: '🤔', label: 'They said they need to think about it', channels: [5] },
+  { id: 'cant_afford', emoji: '💸', label: "They said they can't afford it", channels: [5] },
+  { id: 'not_right_time', emoji: '⏰', label: "They said now's not the right time", channels: [5] },
+  { id: 'talk_to_partner', emoji: '👫', label: 'They need to talk to their partner', channels: [5] },
+  { id: 'make_offer', emoji: '🎯', label: 'I want to make an offer', channels: [5] },
+  { id: 'lead_magnet', emoji: '📧', label: 'I want to offer my lead magnet', channels: [2] },
+  { id: 'check_in', emoji: '🔄', label: 'I want to check in after silence', channels: [2, 3, 5] },
+]
+
+// ─── SITUATION SCRIPTS ────────────────────────────────────────
+const SITUATION_SCRIPTS = {
+  just_followed: {
+    1: [
+      { label: 'Genuine Human Opener', script: `Hey [Name] — okay your [specific thing from their content] had me. [One genuine reaction]. [One curious question about THEM as a person].\n\n💡 Fill in something you actually noticed. If you can't find anything specific — go look at their last 3 posts first.` },
+      { label: 'Authority Reversal', script: `Hey [Name] — I'm actually putting together [something relevant you're building] for [your dream client type]. Your [specific thing about their profile] caught my attention — would love to get your take on something if you have a sec?` },
+    ]
+  },
+  replied_opener: {
+    1: [
+      { label: 'Keep it going — 3-Step Reply', script: `Step 1 — VALIDATE: Mirror what they said. Show you actually read it.\nStep 2 — ADD VALUE: One genuine observation relevant to what they shared.\nStep 3 — ASK ONE QUESTION: Goes one level deeper.\n\n💡 If their reply was warm, consider moving them to CH2 now.` },
+    ],
+    2: [
+      { label: '3-Step Reply Formula', script: `[VALIDATE their reply] + [ADD VALUE with one insight] + [ASK ONE question that goes deeper]\n\n💡 One question per message. Every time. Non-negotiable.` },
+    ],
+    3: [
+      { label: 'They replied — move to CH2', script: `Great — they replied! Move them to CH2 now and continue the conversation there using the 3-Step Reply Formula.` },
+    ]
+  },
+  really_interested: {
+    2: [
+      { label: 'Soft Positioning', script: `You know it's funny — what you just described about [their exact words] is literally what I see with almost every [dream client type] I work with. I've been helping [them] with [result] for a while now and the pattern is always the same. Can I ask you something kind of direct?\n\n💡 Only use this after 3–5 genuine exchanges.` },
+    ],
+    5: [
+      { label: 'Soft Offer', script: `Based on what you shared about [their exact words describing their problem] — that's honestly exactly what [your program name] was built for. It's designed specifically for [dream client] who are dealing with [their situation]. Would it be weird if I told you a bit more about how it works?\n\n💡 The phrase "would it be weird if" is intentional — softer than "would you like to" and gets more yes responses.` },
+    ]
+  },
+  cold_reply: {
+    1: [
+      { label: 'Re-engage gently', script: `No worries — sounds like you're busy! [One genuine comment about something specific from their profile]. If you ever want to chat about [their topic], I'm around.\n\n💡 Don't chase. Plant a seed and move on.` },
+    ],
+    2: [
+      { label: 'Value-add pivot', script: `Totally get it. Hey random thought — I just saw [something relevant] and thought of you based on what you shared about [their situation]. Thought it might be useful: [tip or resource].\n\n💡 Give value, don't ask for anything.` },
+    ],
+    3: [
+      { label: 'Acknowledge and pivot', script: `Appreciate the reply! Based on your [specific profile detail], I had a feeling [topic] might resonate. No pressure either way — just curious what your experience has been with [related question]?\n\n💡 If still cold after this, consider moving to CH4 to warm them up.` },
+    ]
+  },
+  ghosted: {
+    2: [
+      { label: 'Soft check-in', script: `Hey [Name] — just thinking about what you shared about [their situation]. How's that going? Did anything shift?\n\n💡 Give them an easy opening to re-engage.` },
+    ],
+    3: [
+      { label: 'Different angle', script: `Hey [Name] — circling back with a different thought. [New angle or question related to their profile]. Curious if that resonates?\n\n💡 If no reply after 2 attempts, move to CH4 and warm them up before trying again.` },
+    ],
+    5: [
+      { label: 'Objection uncoverer', script: `Hey [Name] — just circling back. I know you were thinking it over — what's your gut telling you?\n\n💡 This surfaces the real objection.` },
+      { label: 'Last call', script: `Hey [Name] — I don't want to keep nudging you if the timing genuinely isn't right. Where are you at with everything?\n\n💡 Gives them permission to say no, which often gets them to share what's really going on.` },
+    ]
+  },
+  need_to_think: {
+    5: [
+      { label: '4-Step Objection Handler', script: `Of course — this is a real decision. Can I ask what specifically you want to think through? Sometimes talking it out helps clarify things faster than thinking alone.\n\n💡 Formula: Acknowledge + Clarify + Address + Re-close` },
+    ]
+  },
+  cant_afford: {
+    5: [
+      { label: '4-Step Objection Handler', script: `I totally get that — [program] is definitely an investment. Can I ask what specifically feels like a stretch right now?\n\n[Listen]\n\n[Address with payment plan or ROI reframe]\n\nDoes knowing that change how it feels?\n\n💡 Formula: Acknowledge + Clarify + Address + Re-close` },
+    ]
+  },
+  not_right_time: {
+    5: [
+      { label: '4-Step Objection Handler', script: `That makes sense — timing matters. Can I ask what would need to be different for the timing to feel right?\n\n[Listen]\n\n[Address the real barrier]\n\nWhat would it mean for you if that barrier wasn't there?\n\n💡 Formula: Acknowledge + Clarify + Address + Re-close` },
+    ]
+  },
+  talk_to_partner: {
+    5: [
+      { label: '4-Step Objection Handler', script: `Absolutely — I'd want you both on the same page too. What do you think their main questions will be? I can make sure you have everything you need to answer them.\n\n💡 Equip them to sell it internally.` },
+    ]
+  },
+  make_offer: {
+    5: [
+      { label: 'Soft Offer Framework', script: `Based on what you shared about [their exact words describing their problem] — that's honestly exactly what [your program name] was built for. It's designed specifically for [dream client] who are dealing with [their situation]. Would it be weird if I told you a bit more about how it works?\n\n💡 Reference their pain using their EXACT words, plant the seed, position your offer, make it optional.` },
+    ]
+  },
+  lead_magnet: {
+    2: [
+      { label: 'Lead Magnet Offer', script: `Hey — given what you shared about [their struggle], I actually put together [LEAD MAGNET] that covers exactly that. Would it be helpful if I sent it over?\n\n💡 Wait for them to say yes before sending.` },
+    ]
+  },
+  check_in: {
+    2: [
+      { label: 'Value-add check-in', script: `Hey [Name] — just thinking about what you shared about [their situation]. How's that going? Did anything shift?` },
+    ],
+    3: [
+      { label: 'Re-engagement', script: `Hey [Name] — saw [something they posted] and thought of our conversation. How's [their goal] going?` },
+    ],
+    5: [
+      { label: 'One more thing', script: `Hey [Name] — totally fine either way, but I wanted to share one thing before I let this go: [one specific result or insight relevant to their exact situation]. Just felt like you needed to hear that.` },
+    ]
+  }
+}
+
+// ─── CHANNEL SCRIPT LIBRARY ───────────────────────────────────
+const CHANNEL_SCRIPTS = {
+  1: {
+    goal: 'Open a genuine conversation within 24–48hrs. Zero selling. Zero agenda. Just be human.',
+    sections: [
+      {
+        title: 'APPROACH A — The Genuine Human Opener',
+        subtitle: 'When their profile gives you something specific',
+        scripts: [
+          { label: 'Specific observation opener', script: `Hey [Name] — okay your [specific thing from their content, e.g. reel about meal prepping / post about their certification / bio mention] had me. [One genuine reaction or observation]. [One curious question about THEM — not their goals, not their struggles, just them as a person].\n\n💡 Fill in something you actually noticed. If you can't find anything specific — go look at their last 3 posts first.` },
+          { label: 'Simpler version', script: `Hey [Name]! Glad you found me — [one specific thing you noticed about their page]. [One question about their work or focus that has nothing to do with coaching or selling].` },
+        ]
+      },
+      {
+        title: 'APPROACH B — The Authority Reversal',
+        subtitle: 'When you want to position yourself without being obvious about it',
+        scripts: [
+          { label: 'Authority Reversal', script: `Hey [Name] — I'm actually putting together [something relevant you're building/creating] for [your dream client type]. Your [specific thing about their profile] caught my attention — would love to get your take on something if you have a sec?\n\n💡 This works because you're the one with something valuable. They become curious about you.` },
+        ]
+      }
+    ],
+    warnings: [
+      `"Out of curiosity, what brought you to my page?" — signals you want to qualify them as a lead`,
+      `"Are you currently working with clients?" — first DM sales radar trigger`,
+      `"I'd love to connect!" — means nothing`,
+      `Any opener that could be sent to 100 people without changing a word`
+    ]
+  },
+  2: {
+    goal: 'Add value, build trust, go deeper. Do NOT mention your offer yet. Your only job is to keep them talking about themselves.',
+    sections: [
+      {
+        title: 'The 3-Step Reply Formula',
+        subtitle: 'For every reply they send you',
+        isFormula: true,
+        formula: `Step 1 — VALIDATE: Mirror what they said. Show you actually read it. (1 sentence)\nStep 2 — ADD VALUE: One genuine observation, resource, or insight relevant to what they shared.\nStep 3 — ASK ONE QUESTION: Goes one level deeper into their situation. Never about your offer.\n\n⚡ One question per message. Every time. Non-negotiable.`,
+        example: {
+          them: `Honestly I've been posting for months and nothing is working.`,
+          you: `Ugh that's the most frustrating place to be — putting in the work and feeling like you're shouting into the void. [VALUE: one genuine observation about why this happens]. Can I ask — when you say nothing's working, are you getting any engagement at all or is it crickets across the board?`
+        }
+      },
+      {
+        title: 'Value-Add Message Templates',
+        subtitle: 'When you want to add value without asking anything',
+        scripts: [
+          { label: 'Resource share', script: `Hey [Name] — saw [something they posted] and immediately thought of [relevant resource/insight]. Thought you might find it useful — [share it or describe it briefly].` },
+          { label: 'Answer a question', script: `Random but I saw your question about [topic] and had to jump in — [genuine answer in 2–3 sentences]. Hope that helps!` },
+          { label: 'Check-in', script: `Hey [Name] — just thinking about what you shared about [their situation]. How's that going? Did anything shift?` },
+        ]
+      },
+      {
+        title: 'Soft Positioning',
+        subtitle: "When you're 3–5 exchanges deep and ready to open the sales door softly",
+        isFormula: true,
+        formula: `Bridge (reference something they said) + Position (mention your expertise naturally — don't brag) + Credibility (one specific real result) + Question (opens the door without pushing through it)`,
+        scripts: [
+          { label: 'Soft positioning script', script: `You know it's funny — what you just described about [their exact words] is literally what I see with almost every [dream client type] I work with. I've been helping [them] with [result] for a while now and the pattern is always the same. Can I ask you something kind of direct?\n\n💡 Only use this after 3–5 genuine exchanges. Too early and it feels like a setup.` },
+        ]
+      }
+    ],
+    warnings: [
+      `"So what are your goals?" — sounds like an intake form`,
+      `"I actually have a program that could help with that" — way too early`,
+      `Two questions in one message — kills conversation momentum`
+    ]
+  },
+  3: {
+    goal: 'One reply. That\'s the only goal. Personalize every single message — if it could be sent to anyone, rewrite it.',
+    sections: [
+      {
+        title: 'The Curiosity Opener',
+        subtitle: 'Your primary cold outreach message',
+        isFormula: true,
+        formula: `Hey [Name], can I ask for your advice on something? I'm [creating content / putting together a guide / building a resource] for [dream client description]. When it comes to [their desired result], what's been the hardest part for you?`,
+        scripts: [
+          { label: 'With personalization (higher reply rate)', script: `Hey [Name] — [one specific observation about something they posted or their bio, e.g. 'saw you just got your health coaching cert' / 'love that you're focusing on postpartum fitness']. Can I ask for your advice on something? I'm creating content for [dream clients]. When it comes to [desired result], what's been the hardest part?` },
+        ]
+      },
+      {
+        title: 'Niche-Specific Examples',
+        subtitle: 'Adapt to your specific audience',
+        scripts: [
+          { label: 'Health coach → new coaches', script: `Hey [Name] — can I ask for your advice? I'm putting together a guide for new health coaches. When it comes to landing your first paying clients, what's been the hardest part so far?` },
+          { label: 'Fitness coach → busy moms', script: `Hey [Name] — can I ask your advice on something? I'm creating content for busy moms who want to get back in shape. When it comes to staying consistent with fitness, what gets in the way most?` },
+          { label: 'Nutrition coach → men 40+', script: `Hey [Name] — quick advice question if you don't mind. I'm building a resource for guys over 40 trying to get their energy back. When it comes to nutrition and training, what's felt hardest to figure out?` },
+          { label: 'Business coach → service providers', script: `Hey [Name] — can I ask for your input on something? I'm creating content for service-based business owners. When it comes to getting consistent clients, what's the biggest thing holding you back?` },
+        ]
+      }
+    ],
+    important: `CH3 always comes AFTER CH4 engagement. This person should already have seen your face via likes, comments, or story reactions before this DM lands. A cold DM to someone who's never seen you = lower reply rate.`,
+    warnings: [
+      `"I came across your profile and love what you're doing"`,
+      `"Are you looking to grow your business / reach your goals?"`,
+      `"I help people like you achieve [result]"`,
+      `Any message over 4 sentences`
+    ]
+  },
+  4: {
+    goal: "Get on their radar before the DM. No selling. No hinting. Just be a real person who finds their content genuinely interesting.",
+    note: "There are no DM scripts for CH4. This channel is engagement only — likes, comments, story reactions. The 'script' here is a genuine comment on their content.",
+    sections: [
+      {
+        title: 'Engagement Comment Templates',
+        subtitle: 'Leave one of these on their most recent relevant post',
+        scripts: [
+          { label: 'React to a result/win they shared', script: `This kind of progress doesn't happen by accident — the consistency here is real.` },
+          { label: 'React to advice/content they posted', script: `The way you broke this down actually made it click for me — hadn't thought about it from that angle.` },
+          { label: 'React to something personal they shared', script: `This is the kind of honest content that actually helps people. More of this please.` },
+          { label: 'React to a question they asked', script: `[Genuine answer to their question in one sentence]. Curious what made you think about this?` },
+        ]
+      }
+    ],
+    rule: `The comment must be about THEIR content. Never mention yourself. Never hint at coaching. Never ask about their goals. Just be a real person.`,
+    timing: `3–5 genuine engagement touches over 3–5 days. Then move them to CH3 for the Curiosity Opener. Don't over-warm — timing matters.`,
+    warnings: []
+  },
+  5: {
+    goal: 'Diagnose → position → soft offer → close. Use their exact words. Never pitch — invite.',
+    sections: [
+      {
+        title: 'Soft Offer Framework',
+        subtitle: "When you're ready to make the offer",
+        isFormula: true,
+        formula: `Reference their pain (use their EXACT words from previous messages) + Plant the seed + Position your offer + Make it optional`,
+        scripts: [
+          { label: 'Soft offer script', script: `Based on what you shared about [their exact words describing their problem] — that's honestly exactly what [your program name] was built for. It's designed specifically for [dream client] who are dealing with [their situation]. Would it be weird if I told you a bit more about how it works?\n\n💡 The phrase "would it be weird if" is intentional — it's softer than "would you like to" and gets significantly more yes responses.` },
+        ]
+      },
+      {
+        title: 'Objection Handling Scripts',
+        subtitle: 'When they hesitate — use the 4-step formula: Acknowledge + Clarify + Address + Re-close',
+        scripts: [
+          { label: `"I can't afford it"`, script: `I totally get that — [program] is definitely an investment. Can I ask what specifically feels like a stretch right now?\n\n[Listen]\n\n[Address with payment plan or ROI reframe]\n\nDoes knowing that change how it feels?` },
+          { label: `"I need to think about it"`, script: `Of course — this is a real decision. Can I ask what specifically you want to think through? Sometimes talking it out helps clarify things faster than thinking alone.` },
+          { label: `"Now's not the right time"`, script: `That makes sense — timing matters. Can I ask what would need to be different for the timing to feel right?\n\n[Listen]\n\n[Address the real barrier]\n\nWhat would it mean for you if that barrier wasn't there?` },
+          { label: `"I need to talk to my partner"`, script: `Absolutely — I'd want you both on the same page too. What do you think their main questions will be? I can make sure you have everything you need to answer them.` },
+          { label: `"I'm not sure it's the right fit"`, script: `That's actually the most important thing to get right. What specifically feels uncertain about the fit?\n\n[Listen]\n\n[Address directly]\n\nBased on what you've shared — [connect their specific situation to your program]. Does that land differently?` },
+        ]
+      },
+      {
+        title: 'Follow-up Scripts',
+        subtitle: 'Strategic follow-up after an offer is made',
+        scripts: [
+          { label: 'Objection Uncoverer', script: `Hey [Name] — just circling back. I know you were thinking it over — what's your gut telling you?` },
+          { label: 'Last Call', script: `Hey [Name] — I don't want to keep nudging you if the timing genuinely isn't right. Where are you at with everything?` },
+          { label: 'One More Thing', script: `Hey [Name] — totally fine either way, but I wanted to share one thing before I let this go: [one specific result or insight relevant to their exact situation]. Just felt like you needed to hear that.` },
+        ]
+      }
+    ],
+    warnings: [
+      `"Just checking in!" — means nothing, signals desperation`,
+      `Making the offer again before addressing the objection`,
+      `"I really think this would be perfect for you" — tells not shows`,
+      `More than one follow-up per week`
+    ]
+  }
+}
+
+// ─── SCRIPTS TAB CONTENT COMPONENT ────────────────────────────
+function ScriptsTabContent({ 
+  prospect, channel, selectedSituation, setSelectedSituation, 
+  expandedChannel, setExpandedChannel, generatingScript, setGeneratingScript,
+  generatedScript, setGeneratedScript, conversationNotes, onOpenAI, userId, sb
+}) {
+  const p = prospect
+  const ch = channel
+  
+  // Auto-expand current channel when tab opens
+  useEffect(() => {
+    if (expandedChannel === null) {
+      setExpandedChannel(p.channel)
+    }
+  }, [])
+  
+  // Get scripts for selected situation filtered by current channel
+  const getSituationScripts = () => {
+    if (!selectedSituation) return []
+    const situationData = SITUATION_SCRIPTS[selectedSituation]
+    if (!situationData) return []
+    // Get scripts for current channel, or closest available
+    return situationData[p.channel] || situationData[Object.keys(situationData)[0]] || []
+  }
+  
+  // Generate personalized script
+  const handleGenerateScript = async () => {
+    setGeneratingScript(true)
+    setGeneratedScript(null)
+    
+    try {
+      const context = conversationNotes.map(n => n.note_text).join('\n')
+      const res = await fetch('/api/ai-suggestion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          prospectId: p.id,
+          prospectName: p.name,
+          channel: p.channel,
+          intel: {},
+          conversationHistory: context,
+          requestType: 'next_message'
+        })
+      })
+      
+      if (res.ok) {
+        const data = await res.json()
+        setGeneratedScript(data.suggestion || data.script || 'Could not generate script.')
+      } else {
+        setGeneratedScript('Could not generate script right now.')
+      }
+    } catch (err) {
+      setGeneratedScript('Error generating script. Try again.')
+    }
+    
+    setGeneratingScript(false)
+  }
+  
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text.replace(/💡.*$/gm, '').trim())
+  }
+
+  return (
+    <>
+      {/* SECTION 1: Situation Selector */}
+      <div style={{marginBottom:24}}>
+        <div style={{color:C.gold,fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>What just happened?</div>
+        <div style={{color:C.dim,fontSize:12,fontStyle:'italic',marginBottom:12}}>Tap your situation and get the right script instantly.</div>
+        
+        <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+          {SITUATIONS.map(sit => (
+            <button
+              key={sit.id}
+              onClick={() => setSelectedSituation(selectedSituation === sit.id ? null : sit.id)}
+              style={{
+                background: selectedSituation === sit.id ? '#3a3a3a' : '#2a2a2a',
+                border: selectedSituation === sit.id ? `1px solid ${C.gold}` : '1px solid #3a3a3a',
+                borderRadius: 8,
+                padding: '8px 12px',
+                color: C.white,
+                fontSize: 12,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                transition: 'all .15s'
+              }}
+            >
+              <span>{sit.emoji}</span>
+              <span>{sit.label}</span>
+            </button>
+          ))}
+        </div>
+        
+        {/* Expanded situation scripts */}
+        {selectedSituation && (
+          <div style={{marginTop:12,background:'#242424',borderRadius:10,padding:14,position:'relative'}}>
+            <button 
+              onClick={() => setSelectedSituation(null)}
+              style={{position:'absolute',top:8,right:8,background:'none',border:'none',color:C.muted,fontSize:16,cursor:'pointer'}}
+            >×</button>
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              {getSituationScripts().map((s, idx) => (
+                <div key={idx} style={{background:'#1a1a1a',borderRadius:8,padding:12}}>
+                  <div style={{color:C.dim,fontSize:11,marginBottom:6}}>{s.label}</div>
+                  <div style={{color:C.gold,fontSize:13,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{s.script}</div>
+                  <button 
+                    onClick={() => copyToClipboard(s.script)}
+                    style={{marginTop:8,background:C.gold,color:C.black,border:'none',padding:'6px 12px',borderRadius:4,fontSize:11,fontWeight:600,cursor:'pointer'}}
+                  >Copy</button>
+                </div>
+              ))}
+              {getSituationScripts().length === 0 && (
+                <div style={{color:C.dim,fontSize:13,fontStyle:'italic'}}>
+                  No scripts for this situation in {ch.key}. Check the Full Script Library below for {ch.name} scripts.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* SECTION 2: Full Script Library */}
+      <div style={{marginBottom:24}}>
+        <div style={{color:C.gold,fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>Full Script Library</div>
+        <div style={{color:C.dim,fontSize:12,marginBottom:12}}>Browse all scripts by channel stage.</div>
+        
+        {CHANNELS.map(chLib => {
+          const isExpanded = expandedChannel === chLib.id
+          const scripts = CHANNEL_SCRIPTS[chLib.id]
+          
+          return (
+            <div key={chLib.id} style={{marginBottom:8}}>
+              <button
+                onClick={() => setExpandedChannel(isExpanded ? null : chLib.id)}
+                style={{
+                  width:'100%',
+                  background: '#2a2a2a',
+                  border: `1px solid ${chLib.id === p.channel ? chLib.color : '#3a3a3a'}`,
+                  borderRadius: isExpanded ? '8px 8px 0 0' : 8,
+                  padding: '12px 14px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                  <span style={{background:chLib.color+'22',color:chLib.color,padding:'3px 8px',borderRadius:4,fontSize:11,fontWeight:700}}>{chLib.key}</span>
+                  <span style={{color:C.white,fontSize:13,fontWeight:600}}>{chLib.name}</span>
+                  {chLib.id === p.channel && <span style={{color:C.dim,fontSize:11}}>(current)</span>}
+                </div>
+                <span style={{color:C.muted,fontSize:14}}>{isExpanded ? '▲' : '▼'}</span>
+              </button>
+              
+              {isExpanded && scripts && (
+                <div style={{background:'#242424',borderRadius:'0 0 8px 8px',padding:14,borderLeft:`1px solid ${chLib.color}`,borderRight:'1px solid #3a3a3a',borderBottom:'1px solid #3a3a3a'}}>
+                  {/* Goal */}
+                  <div style={{color:C.dim,fontSize:12,marginBottom:12,fontStyle:'italic'}}>Goal: {scripts.goal}</div>
+                  
+                  {/* Note for CH4 */}
+                  {scripts.note && (
+                    <div style={{background:'#1a1a1a',borderLeft:`3px solid ${C.gold}`,borderRadius:'0 6px 6px 0',padding:10,marginBottom:12}}>
+                      <div style={{color:C.dim,fontSize:12}}>{scripts.note}</div>
+                    </div>
+                  )}
+                  
+                  {/* Important reminder for CH3 */}
+                  {scripts.important && (
+                    <div style={{background:'#1a1a1a',border:`1px solid ${C.gold}`,borderRadius:6,padding:10,marginBottom:12}}>
+                      <div style={{color:C.gold,fontSize:12}}>⚠️ {scripts.important}</div>
+                    </div>
+                  )}
+                  
+                  {/* Sections */}
+                  {scripts.sections.map((section, sIdx) => (
+                    <div key={sIdx} style={{marginBottom:16}}>
+                      <div style={{color:C.white,fontSize:13,fontWeight:700,marginBottom:2}}>{section.title}</div>
+                      <div style={{color:C.dim,fontSize:11,marginBottom:8}}>{section.subtitle}</div>
+                      
+                      {/* Formula card */}
+                      {section.isFormula && section.formula && (
+                        <div style={{background:'#1a1a1a',borderLeft:`3px solid ${C.gold}`,borderRadius:'0 6px 6px 0',padding:10,marginBottom:8}}>
+                          <div style={{color:C.white,fontSize:12,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{section.formula}</div>
+                        </div>
+                      )}
+                      
+                      {/* Example */}
+                      {section.example && (
+                        <div style={{background:'#1a1a1a',borderRadius:6,padding:10,marginBottom:8}}>
+                          <div style={{color:C.dim,fontSize:11,marginBottom:4}}>They said:</div>
+                          <div style={{color:C.white,fontSize:12,marginBottom:8,fontStyle:'italic'}}>"{section.example.them}"</div>
+                          <div style={{color:C.dim,fontSize:11,marginBottom:4}}>Your reply:</div>
+                          <div style={{color:C.gold,fontSize:12,lineHeight:1.5}}>{section.example.you}</div>
+                        </div>
+                      )}
+                      
+                      {/* Scripts */}
+                      {section.scripts && section.scripts.map((s, scriptIdx) => (
+                        <div key={scriptIdx} style={{background:'#1a1a1a',borderRadius:6,padding:10,marginBottom:6}}>
+                          <div style={{color:C.dim,fontSize:11,marginBottom:4}}>{s.label}</div>
+                          <div style={{color:C.gold,fontSize:12,lineHeight:1.5,whiteSpace:'pre-wrap'}}>{s.script}</div>
+                          <button 
+                            onClick={() => copyToClipboard(s.script)}
+                            style={{marginTop:6,background:C.gold,color:C.black,border:'none',padding:'4px 10px',borderRadius:4,fontSize:10,fontWeight:600,cursor:'pointer'}}
+                          >Copy</button>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                  
+                  {/* Rule for CH4 */}
+                  {scripts.rule && (
+                    <div style={{background:'#1a1a1a',borderRadius:6,padding:10,marginBottom:12}}>
+                      <div style={{color:C.white,fontSize:12}}>⚡ {scripts.rule}</div>
+                    </div>
+                  )}
+                  
+                  {/* Timing for CH4 */}
+                  {scripts.timing && (
+                    <div style={{color:C.dim,fontSize:11,marginBottom:12}}>{scripts.timing}</div>
+                  )}
+                  
+                  {/* Warnings */}
+                  {scripts.warnings && scripts.warnings.length > 0 && (
+                    <div style={{background:'#1a1a1a',borderLeft:'3px solid #C0392B',borderRadius:'0 6px 6px 0',padding:10}}>
+                      <div style={{color:'#C0392B',fontSize:11,fontWeight:700,marginBottom:6}}>WHAT NOT TO SAY</div>
+                      {scripts.warnings.map((w, wIdx) => (
+                        <div key={wIdx} style={{color:C.dim,fontSize:11,marginBottom:2}}>❌ {w}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      
+      {/* SECTION 3: Generate Personalized Script */}
+      <div style={{background:'#242424',borderLeft:`3px solid ${C.gold}`,borderRadius:'0 8px 8px 0',padding:14}}>
+        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
+          <span style={{color:C.gold,fontSize:13,fontWeight:600}}>✦ Want something written for this specific person?</span>
+        </div>
+        <div style={{color:C.dim,fontSize:12,marginBottom:8}}>
+          The scripts above are frameworks. This generates one written specifically for {p.name} based on your actual conversation history.
+        </div>
+        <div style={{color:C.muted,fontSize:11,marginBottom:10}}>Uses 1 AI call</div>
+        
+        <button
+          onClick={handleGenerateScript}
+          disabled={generatingScript}
+          style={{
+            background: 'transparent',
+            border: `1px solid ${C.gold}`,
+            color: C.gold,
+            padding: '10px 16px',
+            borderRadius: 8,
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: generatingScript ? 'wait' : 'pointer',
+            opacity: generatingScript ? 0.7 : 1
+          }}
+        >
+          {generatingScript ? "Sarah's brain is working..." : `Generate My Script for ${p.name}`}
+        </button>
+        
+        {generatedScript && (
+          <div style={{marginTop:12,background:'#1a1a1a',borderRadius:8,padding:12}}>
+            <div style={{color:C.gold,fontSize:13,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{generatedScript}</div>
+            <button 
+              onClick={() => copyToClipboard(generatedScript)}
+              style={{marginTop:8,background:C.gold,color:C.black,border:'none',padding:'6px 12px',borderRadius:4,fontSize:11,fontWeight:600,cursor:'pointer'}}
+            >Copy</button>
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
 export default function ProspectDrawer({ 
   prospect, 
   touches = [],
@@ -198,6 +747,10 @@ export default function ProspectDrawer({
   const [tab, setTab] = useState('intel')
   const [notes, setNotes] = useState([])
   const [intel, setIntel] = useState(null)
+  const [selectedSituation, setSelectedSituation] = useState(null)
+  const [expandedChannel, setExpandedChannel] = useState(null)
+  const [generatingScript, setGeneratingScript] = useState(false)
+  const [generatedScript, setGeneratedScript] = useState(null)
   const [loading, setLoading] = useState(true)
   const [noteText, setNoteText] = useState('')
   const [markAsDm, setMarkAsDm] = useState(false)
@@ -432,7 +985,7 @@ export default function ProspectDrawer({
 
         {/* TABS */}
         <div style={{display:'flex',borderBottom:`1px solid ${C.border}`,flexShrink:0}}>
-          {['intel','activity'].map(t => (
+          {['intel','scripts','activity'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               flex:1,padding:'12px 16px',background:'none',border:'none',
               color:tab===t?C.gold:C.muted,fontSize:14,fontWeight:600,fontFamily:'Oswald,sans-serif',
@@ -509,6 +1062,23 @@ export default function ProspectDrawer({
                 </div>
               </div>
             </>
+          ) : tab === 'scripts' ? (
+            <ScriptsTabContent 
+              prospect={p}
+              channel={ch}
+              selectedSituation={selectedSituation}
+              setSelectedSituation={setSelectedSituation}
+              expandedChannel={expandedChannel}
+              setExpandedChannel={setExpandedChannel}
+              generatingScript={generatingScript}
+              setGeneratingScript={setGeneratingScript}
+              generatedScript={generatedScript}
+              setGeneratedScript={setGeneratedScript}
+              conversationNotes={conversationNotes}
+              onOpenAI={onOpenAI}
+              userId={userId}
+              sb={sb}
+            />
           ) : (
             <>
               {/* Quick Note Entry */}
