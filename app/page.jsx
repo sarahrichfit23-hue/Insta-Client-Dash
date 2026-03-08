@@ -39,86 +39,70 @@ const CHANNELS = [
     id:1, key:'CH1', name:'New Arrivals', color:C.blue, colorDim:'#1a3d5c',
     tagline:'Open conversation within 48hrs', daily:'10-20 touches/day',
     touchTypes:['Welcome DM sent','Followed back','Liked recent posts','Profile noted'],
-    script:`WELCOME DM (send within 24-48 hrs of their follow)
+    script:`CH1 — New Arrival Scripts
 
-"Hey [Name]! Thanks for the follow — just checked out your page and love [SPECIFIC OBSERVATION].
+APPROACH A — Genuine Human Opener:
+"Hey [Name] — [one specific thing you noticed]. [One curious question about them as a person — not their goals]."
 
-Quick question — what brought you over to my corner of Instagram?"
+APPROACH B — Authority Reversal:
+"Hey [Name] — I'm putting together [something relevant] for [dream clients]. Your [specific profile detail] caught my attention — would love your take on something?"
 
 ━━━━━━━━━━━━━━━━━━━━━━
-⚡ Always include ONE specific detail.
-Generic = ignored. Specific = conversation.
+Never ask: "What brought you to my page?" or "Are you working with clients?"
 ━━━━━━━━━━━━━━━━━━━━━━
-GOAL: Get a reply. That's it.
-Once they reply → move to CH2.`,
+GOAL: One reply. Once they reply → move to CH2.`,
   },
   {
     id:2, key:'CH2', name:'Warm Conversations', color:C.orange, colorDim:'#5a3a05',
     tagline:'Add value, build trust, open the sales window', daily:'20-30 touches/day',
     touchTypes:['Value-add message','Lead magnet offered','Lead magnet sent','Resource shared','Story reaction','Comment left','Sales window opened'],
-    script:`VALUE-ADD MESSAGE
-"Hey — saw this and thought of what you shared about [their struggle]. Thought it might be useful: [tip or resource]. How's it going with [their goal] this week?"
+    script:`CH2 — Warm Conversation Scripts
+
+3-STEP REPLY FORMULA:
+Step 1: Validate (mirror what they said)
+Step 2: Add Value (one genuine insight)
+Step 3: Ask ONE question (goes deeper — never about your offer)
+
+SOFT POSITIONING (after 3–5 exchanges):
+"What you described about [their words] is exactly what I see with [dream clients] I work with. I've been helping them with [result]. Can I ask you something kind of direct?"
 
 ━━━━━━━━━━━━━━━━━━━━━━
-LEAD MAGNET OFFER (after 2-3 exchanges)
-"Do you have [topic] figured out? Given what you're working on, I think [LEAD MAGNET] would be genuinely useful. Want me to send it over?"
+Never: two questions in one message
 ━━━━━━━━━━━━━━━━━━━━━━
-
-WHEN THEY ASK "WHAT DO YOU DO?" — SALES WINDOW IS OPEN
-"I work with [avatar] who are dealing with [struggle] to help them [result] in [timeframe]. Is that kind of where you are right now?"
-
-→ Don't give pricing yet
-→ Describe who you help + result
-→ Check fit → confirmed fit → move to CH5`,
+When interest signals appear → move to CH5.`,
   },
   {
     id:3, key:'CH3', name:'Cold Activation', color:C.purple, colorDim:'#3d1a5c',
     tagline:'Send opening DM — goal is one reply', daily:'30-40 DMs/day',
-    touchTypes:['Method 1 DM sent','Method 2 DM sent','Method 3 DM sent','Method 4 DM sent'],
-    script:`METHOD 1 — Proof-First / Founding Member
-"Hey [Name] — I'm building a [program type] and looking for 10 founding members. Founding members get [specific benefit]. In exchange, I get real feedback. Open to hearing more?"
+    touchTypes:['Curiosity Opener sent','Authority Reversal sent','Genuine Opener sent'],
+    script:`CH3 — Curiosity Opener Scripts
+
+CURIOSITY OPENER:
+"Hey [Name], can I ask for your advice? I'm creating content for [dream clients]. When it comes to [desired result], what's been the hardest part?"
+
+ADD PERSONALIZATION for higher reply rates:
+"Hey [Name] — [one specific thing from their profile]. Can I ask for your advice? [Rest of opener]"
 
 ━━━━━━━━━━━━━━━━━━━━━━
-
-METHOD 2 — The Advice Ask
-"Can I ask for your advice? I'm creating content to help [their identity] with [goal]. When it comes to [result], what's your biggest challenge?"
-
+Always do CH4 engagement BEFORE this DM
 ━━━━━━━━━━━━━━━━━━━━━━
-
-METHOD 3 — Curiosity Opener
-"Hey [Name] — came across your page and loved [SPECIFIC THING]. I work with [avatar] to help them [result]. Is that something you're actively working on?"
-
-━━━━━━━━━━━━━━━━━━━━━━
-
-METHOD 4 — Authority Reversal
-"Hey [Name] — been following your content and what you're doing with [specific thing] is genuinely impressive. Mostly curious — what's been your biggest challenge lately with [their topic]?"
-
-━━━━━━━━━━━━━━━━━━━━━━
-⚡ ALL METHODS: Personalize with ONE detail.
 Reply received → move to CH2.`,
   },
   {
     id:4, key:'CH4', name:'Warm-Up Engagement', color:C.green, colorDim:'#0d3d1f',
     tagline:'Get on radar before the DM', daily:'15-25 profiles/day',
     touchTypes:['Liked 2-3 posts','Left genuine comment','Reacted to story','Followed','Saved for CH3 DM'],
-    script:`NO DM YET — engagement only for 2-3 days first.
+    script:`CH4 — Engagement Comments
 
-DAY 1-2:
-→ Like 2-3 of their recent posts
-→ Leave ONE genuine comment (specific, not "great post!")
+NO DMs IN CH4 — engagement only.
 
-DAY 2-3:
-→ React to stories if they post them
-→ Note what they post about for your opener
-
-DAY 3-5:
-→ Send your CH3 DM
-→ It lands WARM because they recognize your name
+COMMENT IDEAS:
+"This kind of progress doesn't happen by accident."
+"The way you broke this down actually made it click."
+"More of this kind of honest content please."
 
 ━━━━━━━━━━━━━━━━━━━━━━
-Familiarity before outreach.
-Not a stranger — a familiar face.
-That's the difference between 5% and 30% reply rates.
+Do 3–5 touches over 3–5 days. Then move to CH3.
 ━━━━━━━━━━━━━━━━━━━━━━
 Ready to DM → move to CH3.`,
   },
@@ -126,24 +110,19 @@ Ready to DM → move to CH3.`,
     id:5, key:'CH5', name:'Conversion Touches', color:C.red, colorDim:'#5c1a1a',
     tagline:'Diagnose → position → offer → close', daily:'5-10 touches — highest value',
     touchTypes:['Soft position sent','Soft offer sent','Objection handled','Payment plan offered','Discovery call booked','Sale closed — Tier 1','Sale closed — Tier 2','Sale closed — Tier 3','Follow-up touch 1','Follow-up touch 2','Follow-up touch 3 (final)'],
-    script:`SOFT OFFER
-"Based on everything you've shared about [their situation], I genuinely think [program] would be a strong fit. It's built for [avatar] dealing with exactly what you described. Here's how it works: [one sentence]. Want me to walk you through the details?"
+    script:`CH5 — Conversion Scripts
+
+SOFT OFFER:
+"Based on what you shared about [their exact words] — that's exactly what [program] was built for. Would it be weird if I told you more about how it works?"
+
+OBJECTION HANDLING — 4 steps:
+Acknowledge + Clarify + Address + Re-close
+
+FOLLOW-UP:
+"Just circling back — what's your gut telling you?"
 
 ━━━━━━━━━━━━━━━━━━━━━━
-
-IF YES — TIER 2 (low ticket)
-"[PROGRAM] is [PRICE] and includes: [1], [2], [3]. Most people see [result] within [timeframe]. Link: [LINK]"
-
-IF YES — TIER 3 (discovery call)
-"Best next step is a quick call so I can make sure it's the right fit. Calendar: [LINK]"
-
-━━━━��━━━━━━━━━━━━━━━━━
-
-3-TOUCH FOLLOW-UP (if they go quiet)
-Touch 1 (3-5 days): "Just circling back. Totally fine if timing is off."
-Touch 2 (5-7 days): "Quick check-in — still thinking about this?"
-Touch 3 — FINAL: "Closing the loop for now. Door's open whenever."
-
+Never: "Just checking in!" or repeat the offer before addressing the objection
 ━━━━━━━━━━━━━━━━━━━━━━
 Closing is clarity, not pressure.`,
   },
