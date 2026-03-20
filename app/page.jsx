@@ -1,6 +1,31 @@
 'use client'
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { createClient } from '@/lib/supabase'
+import { createBrowserClient } from '@supabase/ssr'
+
+// ─── SUPABASE CLIENT ──────────────────────────────────────────
+function createClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !key) {
+    // Return mock client for build time
+    return {
+      auth: {
+        getSession: () => Promise.resolve({ data: { session: null } }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+        signInWithPassword: () => Promise.resolve({ error: { message: 'Not configured' } }),
+        signUp: () => Promise.resolve({ error: { message: 'Not configured' } }),
+        signOut: () => Promise.resolve({}),
+      },
+      from: () => ({
+        select: () => ({ eq: () => ({ eq: () => Promise.resolve({ data: [] }), single: () => Promise.resolve({ data: null }) }) }),
+        insert: () => Promise.resolve({ data: null }),
+        update: () => ({ eq: () => Promise.resolve({ data: null }) }),
+        upsert: () => Promise.resolve({ data: null }),
+      }),
+    }
+  }
+  return createBrowserClient(url, key)
+}
 
 // ─── BRAND COLORS ─────────────────────────────────────────────
 const C = {
@@ -123,20 +148,35 @@ function TextCell({ value, placeholder, onChange, style = {} }) {
 // ─── INLINE DROPDOWN ──────────────────────────────────────────
 function DropdownCell({ value, options, onChange, placeholder, colorMap }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef(null)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const btnRef = useRef(null)
+  const dropRef = useRef(null)
 
   useEffect(() => {
-    const close = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    const close = e => { 
+      if (btnRef.current && !btnRef.current.contains(e.target) && dropRef.current && !dropRef.current.contains(e.target)) {
+        setOpen(false) 
+      }
+    }
     document.addEventListener('mousedown', close)
     return () => document.removeEventListener('mousedown', close)
   }, [])
 
+  const handleOpen = () => {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect()
+      setPos({ top: rect.bottom + 2, left: rect.left })
+    }
+    setOpen(!open)
+  }
+
   const color = colorMap?.[value]
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <>
       <button
-        onClick={() => setOpen(!open)}
+        ref={btnRef}
+        onClick={handleOpen}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -158,19 +198,20 @@ function DropdownCell({ value, options, onChange, placeholder, colorMap }) {
         <span style={{ color: C.gray400, fontSize: 10 }}>▾</span>
       </button>
       {open && (
-        <div style={{
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          background: C.white,
-          border: `1px solid ${C.border}`,
-          borderRadius: 4,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          zIndex: 100,
-          minWidth: 140,
-          maxHeight: 200,
-          overflow: 'auto',
-        }}>
+        <div 
+          ref={dropRef}
+          style={{
+            position: 'fixed',
+            top: pos.top,
+            left: pos.left,
+            background: C.white,
+            border: `1px solid ${C.border}`,
+            borderRadius: 4,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            zIndex: 9999,
+            minWidth: 140,
+          }}
+        >
           {options.map(o => (
             <div
               key={o}
@@ -190,7 +231,7 @@ function DropdownCell({ value, options, onChange, placeholder, colorMap }) {
           ))}
         </div>
       )}
-    </div>
+    </>
   )
 }
 
@@ -396,69 +437,59 @@ function DailyPage({ prospects, touches, todayTouches, onUpdate, onLogTouch, onO
         <div style={{ fontSize: 14, color: C.gray600 }}>Touches today: <span style={{ color: C.gold, fontWeight: 600 }}>{todayTouches}</span> / 100</div>
       </div>
 
-      {/* Main Table */}
-      <div style={{ border: `1px solid ${C.border}`, borderRadius: 6, overflow: 'hidden', marginBottom: 20 }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
-            <thead>
-              <tr>
-                <th style={{ ...headerStyle, width: 130 }}>Name</th>
-                <th style={{ ...headerStyle, width: 100 }}>Handle</th>
-                <th style={{ ...headerStyle, width: 90 }}>Platform</th>
-                <th style={{ ...headerStyle, width: 130 }}>Where Found</th>
-                <th style={{ ...headerStyle, width: 80 }}>Status</th>
-                <th style={{ ...headerStyle, width: 110 }}>Signal Tag</th>
-                <th style={{ ...headerStyle, width: 120 }}>Next Action</th>
-                <th style={{ ...headerStyle, width: 90 }}>Call Booked</th>
-                <th style={{ ...headerStyle, width: 180, borderRight: 'none' }}>Notes</th>
-                <th style={{ ...headerStyle, width: 50, borderRight: 'none', textAlign: 'center' }}></th>
+      {/* Main Table - No scroll container, dropdowns use fixed positioning */}
+      <div style={{ border: `1px solid ${C.border}`, borderRadius: 6, marginBottom: 20 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ ...headerStyle, width: 130 }}>Name</th>
+              <th style={{ ...headerStyle, width: 110 }}>Handle</th>
+              <th style={{ ...headerStyle, width: 100 }}>Platform</th>
+              <th style={{ ...headerStyle, width: 100 }}>Status</th>
+              <th style={{ ...headerStyle, width: 110 }}>Signal Tag</th>
+              <th style={{ ...headerStyle, width: 90 }}>Call</th>
+              <th style={{ ...headerStyle, borderRight: 'none' }}>Notes</th>
+              <th style={{ ...headerStyle, width: 50, borderRight: 'none', textAlign: 'center' }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {workingList.map(p => (
+              <tr key={p.id} style={{ background: C.white }} onMouseEnter={e => e.currentTarget.style.background = C.gray50} onMouseLeave={e => e.currentTarget.style.background = C.white}>
+                <td style={cellStyle}>
+                  <button onClick={() => onOpenPanel(p)} style={{ background: 'none', border: 'none', padding: 0, fontSize: 13, fontWeight: 500, color: C.gold, cursor: 'pointer', textAlign: 'left' }}>
+                    {p.name}
+                  </button>
+                </td>
+                <td style={cellStyle}>
+                  <TextCell value={formatHandle(p.handle)} placeholder="@handle" onChange={v => onUpdate(p.id, { handle: v.replace(/^@+/, '') })} />
+                </td>
+                <td style={cellStyle}>
+                  <DropdownCell value={p.platform} options={PLATFORMS} placeholder="Platform" onChange={v => onUpdate(p.id, { platform: v })} />
+                </td>
+                <td style={cellStyle}>
+                  <DropdownCell value={STATUSES.find(s => s.id === p.status)?.label || p.status} options={STATUSES.map(s => s.label)} placeholder="Status" colorMap={statusColors} onChange={v => onUpdate(p.id, { status: STATUSES.find(s => s.label === v)?.id || v })} />
+                </td>
+                <td style={cellStyle}>
+                  <DropdownCell value={p.signal_tag} options={SIGNAL_TAGS} placeholder="Signal" onChange={v => onUpdate(p.id, { signal_tag: v })} />
+                </td>
+                <td style={cellStyle}>
+                  <DropdownCell value={p.call_booked} options={CALL_OPTIONS} placeholder="No" onChange={v => onUpdate(p.id, { call_booked: v })} />
+                </td>
+                <td style={{ ...cellStyle, borderRight: 'none' }}>
+                  <TextCell value={p.notes} placeholder="Notes..." onChange={v => onUpdate(p.id, { notes: v })} />
+                </td>
+                <td style={{ ...cellStyle, borderRight: 'none', textAlign: 'center' }}>
+                  <button onClick={() => onLogTouch(p.id)} style={{ background: C.gold, color: C.white, border: 'none', padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Log</button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {workingList.map(p => (
-                <tr key={p.id} style={{ background: C.white }} onMouseEnter={e => e.currentTarget.style.background = C.gray50} onMouseLeave={e => e.currentTarget.style.background = C.white}>
-                  <td style={cellStyle}>
-                    <button onClick={() => onOpenPanel(p)} style={{ background: 'none', border: 'none', padding: 0, fontSize: 13, fontWeight: 500, color: C.gold, cursor: 'pointer', textAlign: 'left' }}>
-                      {p.name}
-                    </button>
-                  </td>
-                  <td style={cellStyle}>
-                    <TextCell value={formatHandle(p.handle)} placeholder="@handle" onChange={v => onUpdate(p.id, { handle: v.replace(/^@+/, '') })} />
-                  </td>
-                  <td style={cellStyle}>
-                    <DropdownCell value={p.platform} options={PLATFORMS} placeholder="Platform" onChange={v => onUpdate(p.id, { platform: v })} />
-                  </td>
-                  <td style={cellStyle}>
-                    <DropdownCell value={p.where_found} options={WHERE_FOUND} placeholder="Where found" onChange={v => onUpdate(p.id, { where_found: v })} />
-                  </td>
-                  <td style={cellStyle}>
-                    <DropdownCell value={STATUSES.find(s => s.id === p.status)?.label || p.status} options={STATUSES.map(s => s.label)} placeholder="Status" colorMap={statusColors} onChange={v => onUpdate(p.id, { status: STATUSES.find(s => s.label === v)?.id || v })} />
-                  </td>
-                  <td style={cellStyle}>
-                    <DropdownCell value={p.signal_tag} options={SIGNAL_TAGS} placeholder="Signal" onChange={v => onUpdate(p.id, { signal_tag: v })} />
-                  </td>
-                  <td style={cellStyle}>
-                    <TextCell value={p.next_action} placeholder="Next step" onChange={v => onUpdate(p.id, { next_action: v })} />
-                  </td>
-                  <td style={cellStyle}>
-                    <DropdownCell value={p.call_booked} options={CALL_OPTIONS} placeholder="—" onChange={v => onUpdate(p.id, { call_booked: v })} />
-                  </td>
-                  <td style={{ ...cellStyle, borderRight: 'none' }}>
-                    <TextCell value={p.notes} placeholder="Notes..." onChange={v => onUpdate(p.id, { notes: v })} style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} />
-                  </td>
-                  <td style={{ ...cellStyle, borderRight: 'none', textAlign: 'center' }}>
-                    <button onClick={() => onLogTouch(p.id)} style={{ background: C.gold, color: C.white, border: 'none', padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Log</button>
-                  </td>
-                </tr>
-              ))}
-              {workingList.length === 0 && (
-                <tr>
-                  <td colSpan={10} style={{ ...cellStyle, textAlign: 'center', color: C.gray400, padding: 30, borderRight: 'none' }}>No prospects yet. Click + to add.</td>
-                </tr>
-              )}
+            ))}
+            {workingList.length === 0 && (
+              <tr>
+                <td colSpan={8} style={{ ...cellStyle, textAlign: 'center', color: C.gray400, padding: 30, borderRight: 'none' }}>No prospects yet. Click + to add.</td>
+              </tr>
+            )}
             </tbody>
           </table>
-        </div>
       </div>
 
       {/* Needs Attention */}
